@@ -88,7 +88,7 @@ public final class IntentUtils {
         try {
             List<ResolveInfo> list = packageManager.queryIntentActivities(
                     intent, PackageManager.MATCH_DEFAULT_ONLY);
-            return list != null && !list.isEmpty();
+            return !list.isEmpty();
         } catch (Exception e) {
             return false;
         }
