@@ -2,27 +2,31 @@ package ru.igla.duocamera
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.media.MediaRecorder
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.parcelize.Parcelize
+import ru.igla.duocamera.ui.BaseFragment
 import ru.igla.duocamera.ui.GenericListAdapter
+import ru.igla.duocamera.utils.IntentUtils
 
 
 /**
  * In this [Fragment] we let users pick a camera, size and FPS to use for high
  * speed video recording
  */
-class SelectorFragment : Fragment() {
+class SelectorFragment : BaseFragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,7 +43,6 @@ class SelectorFragment : Fragment() {
 
             val cameraManager =
                 requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager
-
             val cameraList = enumerateVideoCameras(cameraManager)
 
             val layoutId = android.R.layout.simple_list_item_1
@@ -52,24 +55,22 @@ class SelectorFragment : Fragment() {
         }
     }
 
-
     private fun onClick(item: CameraInfo) {
-        Navigation.findNavController(requireActivity(), R.id.fragment_container)
-            .navigate(
-                SelectorFragmentDirections.actionSelectorToCamera(
-                    item.cameraId, item.size.width, item.size.height, item.fps
-                )
-            )
+        val intent = Intent(context, DebugCameraActivity::class.java).apply {
+            putExtra("data", item)
+        }
+        IntentUtils.startActivitySafely(requireContext(), intent)
     }
 
     companion object {
 
-        private data class CameraInfo(
+        @Parcelize
+        data class CameraInfo(
             val name: String,
             val cameraId: String,
             val size: Size,
             val fps: Int
-        )
+        ) : Parcelable
 
         /** Converts a lens orientation enum into a human-readable string */
         private fun lensOrientationString(value: Int) = when (value) {

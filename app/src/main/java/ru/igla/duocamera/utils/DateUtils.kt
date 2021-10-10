@@ -1,42 +1,12 @@
 package ru.igla.duocamera.utils
 
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.math.abs
 
 /**
  * Created by lashkov on 13/02/16.
  * Copyright (c) 2016 igla LLC. All rights reserved.
  */
 object DateUtils {
-
-    private const val FULL_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS"
-    private val DETAIL_DATE_FORMAT = SimpleDateFormat("dd/MM/yy HH:mm:ss:SSS", Locale.US)
-
-    @JvmStatic
-    fun getDateStr(date: Date): String {
-        return DETAIL_DATE_FORMAT.format(date)
-    }
-
-    @JvmStatic
-    fun getTimeFromFloat(value: Float): Long {
-        val hours = value.toInt()
-        val minutes = ((value % 1) * 100).toInt()
-        return TimeUnit.HOURS.toMillis(hours.toLong()) + TimeUnit.MINUTES.toMillis(minutes.toLong())
-    }
-
-    @JvmStatic
-    fun getSimpleReadableDateTime(timestamp: Long): String? {
-        return try {
-            val sdf: DateFormat = SimpleDateFormat(FULL_DATE_FORMAT, Locale.US)
-            val netDate = Date(timestamp)
-            sdf.format(netDate)
-        } catch (ex: Exception) {
-            null
-        }
-    }
 
     /**
      * Returns the current time in milliseconds.  Note that
@@ -73,14 +43,5 @@ object DateUtils {
     @JvmStatic
     fun getDateNowNano(): Long {
         return System.nanoTime()
-    }
-
-    /**
-     * Returns a long that describes the number of weeks
-     * between timeOne and timeTwo.
-     */
-    @JvmStatic
-    fun getSecondsDiff(date1: Long, date2: Long): Long {
-        return TimeUnit.MILLISECONDS.toSeconds(abs(date2 - date1))
     }
 }

@@ -15,13 +15,13 @@ import android.util.Log
 import android.util.Range
 import android.view.*
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import ru.igla.duocamera.databinding.DebugCameraFragmentBinding
+import ru.igla.duocamera.ui.toastcompat.Toaster
 import ru.igla.duocamera.utils.IntentUtils
 import ru.igla.duocamera.utils.OrientationLiveData
 import ru.igla.duocamera.utils.ViewUtils
@@ -32,6 +32,8 @@ import kotlin.coroutines.suspendCoroutine
 
 
 class DebugCameraFragment : Fragment() {
+
+    private val toaster: Toaster by lazy { Toaster(requireContext().applicationContext) }
 
     private var cameraId = "0"
     private var fps = 30
@@ -195,13 +197,13 @@ class DebugCameraFragment : Fragment() {
 
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
-            observe(viewLifecycleOwner, Observer { orientation ->
+            observe(viewLifecycleOwner, { orientation ->
                 Log.d(TAG, "Orientation changed: $orientation")
             })
         }
     }
 
-    private fun onTouchDown() {
+    private fun requestStartRecord() {
         // Prevents screen rotation during the video recording
         requireActivity().requestedOrientation =
             ActivityInfo.SCREEN_ORIENTATION_LOCKED
@@ -222,7 +224,7 @@ class DebugCameraFragment : Fragment() {
         fragmentCameraBinding.overlay.post(animationTask)
     }
 
-    private suspend fun onTouchUp(view: View) {
+    private suspend fun requestStopRecording(view: View) {
         // Unlocks screen rotation after recording finished
         requireActivity().requestedOrientation =
             ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -233,14 +235,23 @@ class DebugCameraFragment : Fragment() {
         fragmentCameraBinding.overlay.removeCallbacks(animationTask)
 
         // Broadcasts the media file to the rest of the system
+        logI { "Scan video file ${mediaRecorderWrapper.outputFile.absolutePath}" }
         MediaScannerConnection.scanFile(
-            view.context, arrayOf(mediaRecorderWrapper.outputFile.absolutePath), null, null
+            view.context,
+            arrayOf(mediaRecorderWrapper.outputFile.absolutePath),
+            null,
+            null
         )
 
-        // Launch external activity via intent to play video recorded using our provider
-        IntentUtils.startActivitySafely(
-            view.context, mediaRecorderWrapper.resolveIntentFile()
-        )
+        ViewUtils.runOnUiThread {
+            toaster.showToast("Video file ${mediaRecorderWrapper.outputFile.absolutePath}")
+
+            // Launch external activity via intent to play video recorded using our provider
+            IntentUtils.startActivitySafely(
+                view.context,
+                mediaRecorderWrapper.resolveIntentFile()
+            )
+        }
 
         // Finishes our current camera screen
         delay(DebugCameraActivity.ANIMATION_SLOW_MILLIS)
@@ -268,20 +279,22 @@ class DebugCameraFragment : Fragment() {
         //  session.stopRepeating() is called
         session.setRepeatingRequest(previewRequest, null, cameraHandler)
 
-        // React to user touching the capture button
-        fragmentCameraBinding.captureButton.setOnTouchListener { view, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> lifecycleScope.launch(Dispatchers.IO) {
-                    onTouchDown()
-                }
-                MotionEvent.ACTION_UP,
-                MotionEvent.ACTION_CANCEL -> lifecycleScope.launch(Dispatchers.IO) {
-                    onTouchUp(view)
+        fragmentCameraBinding.captureButton.setOnClickListener { view ->
+            lifecycleScope.launch(Dispatchers.IO) {
+                if (recordingStatus == STATE_IDLE) {
+                    recordingStatus = STATE_STARTING
+                    requestStartRecord()
+                    recordingStatus = STATE_RECORDING
+                } else if (recordingStatus == STATE_RECORDING) {
+                    recordingStatus = STATE_STOPPING
+                    requestStopRecording(view)
+                    recordingStatus = STATE_IDLE
                 }
             }
-            true
         }
     }
+
+    private var recordingStatus = STATE_IDLE
 
     /** Opens the camera and returns the opened device (as the result of the suspend coroutine) */
     @SuppressLint("MissingPermission")
@@ -352,15 +365,20 @@ class DebugCameraFragment : Fragment() {
         cameraThread.quitSafely()
         mediaRecorderWrapper.destroyRecording()
         recorderSurface.release()
-        ViewUtils.cancelCallbacks()
     }
 
     override fun onDestroyView() {
+        ViewUtils.cancelCallbacks()
         _fragmentCameraBinding = null
         super.onDestroyView()
     }
 
     companion object {
         private val TAG = DebugCameraFragment::class.java.simpleName
+
+        private const val STATE_IDLE = 0
+        private const val STATE_RECORDING = 1
+        private const val STATE_STARTING = 1
+        private const val STATE_STOPPING = 2
     }
 }

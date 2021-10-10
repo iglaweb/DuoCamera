@@ -1,4 +1,4 @@
-package ru.igla.duocamera;
+package ru.igla.duocamera
 
 import android.Manifest
 import android.content.Context
@@ -8,32 +8,41 @@ import android.view.View
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.navigation.Navigation
 import com.google.android.material.snackbar.Snackbar
+import ru.igla.duocamera.ui.BaseFragment
+
 
 private const val PERMISSIONS_REQUEST_CODE = 10
 private val PERMISSIONS_REQUIRED = arrayOf(
     Manifest.permission.CAMERA,
-    Manifest.permission.RECORD_AUDIO
+    Manifest.permission.RECORD_AUDIO,
+    Manifest.permission.WRITE_EXTERNAL_STORAGE
 )
 
 /**
  * This [Fragment] requests permissions and, once granted, it will navigate to the next fragment
  */
-class PermissionsFragment : Fragment() {
+class PermissionsFragment : BaseFragment() {
+
+    private var mListener: OnBackFragmentGoListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         if (hasPermissions(requireContext())) {
             // If permissions have already been granted, proceed
-            Navigation.findNavController(requireActivity(), R.id.fragment_container).navigate(
-                PermissionsFragmentDirections.actionPermissionsToSelector()
-            )
+            mListener?.onFinishFragment()
+            activity?.supportFragmentManager?.popBackStack()
         } else {
             requestCameraPermission()
-            // Request camera-related permissions
-            //requestPermissions(PERMISSIONS_REQUIRED, PERMISSIONS_REQUEST_CODE)
+        }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        mListener = try {
+            activity as OnBackFragmentGoListener
+        } catch (e: ClassCastException) {
+            throw ClassCastException("$activity must implement OnArticleSelectedListener")
         }
     }
 
@@ -48,8 +57,10 @@ class PermissionsFragment : Fragment() {
         val listener = View.OnClickListener {
             requestPermissions(PERMISSIONS_REQUIRED, PERMISSIONS_REQUEST_CODE)
         }
+
+        val rootView: View = requireActivity().window.decorView.findViewById(android.R.id.content)
         Snackbar.make(
-            requireView(),
+            rootView,
             "Request camera and record permissions",
             Snackbar.LENGTH_INDEFINITE
         )
@@ -64,9 +75,8 @@ class PermissionsFragment : Fragment() {
         if (requestCode == PERMISSIONS_REQUEST_CODE) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Takes the user to the success fragment when permission is granted
-                Navigation.findNavController(requireActivity(), R.id.fragment_container).navigate(
-                    PermissionsFragmentDirections.actionPermissionsToSelector()
-                )
+                mListener?.onFinishFragment()
+                activity?.supportFragmentManager?.popBackStack()
             } else {
                 Toast.makeText(context, "Permission request denied", Toast.LENGTH_LONG).show()
             }

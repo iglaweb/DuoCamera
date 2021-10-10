@@ -1,19 +1,3 @@
-/*
- * Copyright 2020 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package ru.igla.duocamera
 
 import android.graphics.Point
@@ -47,11 +31,11 @@ fun getDisplaySmartSize(display: Display): SmartSize {
  * https://d.android.com/reference/android/hardware/camera2/CameraDevice and
  * https://developer.android.com/reference/android/hardware/camera2/params/StreamConfigurationMap
  */
-fun <T>getPreviewOutputSize(
-        display: Display,
-        characteristics: CameraCharacteristics,
-        targetClass: Class<T>,
-        format: Int? = null
+fun <T> getPreviewOutputSize(
+    display: Display,
+    characteristics: CameraCharacteristics,
+    targetClass: Class<T>,
+    format: Int? = null
 ): Size {
 
     // Find which is smaller: screen or 1080p
@@ -61,7 +45,8 @@ fun <T>getPreviewOutputSize(
 
     // If image format is provided, use it to determine supported sizes; else use target class
     val config = characteristics.get(
-            CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
+        CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
+    )!!
     if (format == null)
         assert(StreamConfigurationMap.isOutputSupportedFor(targetClass))
     else
@@ -71,8 +56,8 @@ fun <T>getPreviewOutputSize(
 
     // Get available sizes and sort them by area from largest to smallest
     val validSizes = allSizes
-            .sortedWith(compareBy { it.height * it.width })
-            .map { SmartSize(it.width, it.height) }.reversed()
+        .sortedWith(compareBy { it.height * it.width })
+        .map { SmartSize(it.width, it.height) }.reversed()
 
     // Then, get the largest output size that is smaller or equal than our max size
     return validSizes.first { it.long <= maxSize.long && it.short <= maxSize.short }.size
