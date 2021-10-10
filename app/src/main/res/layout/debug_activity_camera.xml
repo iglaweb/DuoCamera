@@ -67,5 +67,29 @@
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textview_cam0_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Cam 0: 30 fps"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:id="@+id/textview_cam1_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Cam 1: idle"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            tools:ignore="HardcodedText" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
 </androidx.appcompat.widget.LinearLayoutCompat>
 

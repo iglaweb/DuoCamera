@@ -4,8 +4,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.Color
+import android.graphics.ImageFormat
 import android.graphics.drawable.ColorDrawable
 import android.hardware.camera2.*
+import android.media.ImageReader
+import android.media.ImageReader.OnImageAvailableListener
 import android.media.MediaScannerConnection
 import android.os.Bundle
 import android.os.Handler
@@ -21,6 +24,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import ru.igla.duocamera.databinding.DebugCameraFragmentBinding
+import ru.igla.duocamera.ui.FlashRecordAnimation
 import ru.igla.duocamera.ui.toastcompat.Toaster
 import ru.igla.duocamera.utils.IntentUtils
 import ru.igla.duocamera.utils.OrientationLiveData
@@ -32,6 +36,8 @@ import kotlin.coroutines.suspendCoroutine
 
 
 class DebugCameraFragment : Fragment() {
+
+    private val flashRecordAnimation by lazy { FlashRecordAnimation() }
 
     private val toaster: Toaster by lazy { Toaster(requireContext().applicationContext) }
 
@@ -220,19 +226,13 @@ class DebugCameraFragment : Fragment() {
             mediaRecorderWrapper.startRecording(this)
         }
 
-        // Starts recording animation
-        fragmentCameraBinding.overlay.post(animationTask)
+        ViewUtils.runOnUiThread {
+            flashRecordAnimation.startAnim(fragmentCameraBinding.captureButton)
+        }
     }
 
     private suspend fun requestStopRecording(view: View) {
-        // Unlocks screen rotation after recording finished
-        requireActivity().requestedOrientation =
-            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-
         mediaRecorderWrapper.stopRecording()
-
-        // Removes recording animation
-        fragmentCameraBinding.overlay.removeCallbacks(animationTask)
 
         // Broadcasts the media file to the rest of the system
         logI { "Scan video file ${mediaRecorderWrapper.outputFile.absolutePath}" }
@@ -244,6 +244,7 @@ class DebugCameraFragment : Fragment() {
         )
 
         ViewUtils.runOnUiThread {
+            flashRecordAnimation.stopAnim()
             toaster.showToast("Video file ${mediaRecorderWrapper.outputFile.absolutePath}")
 
             // Launch external activity via intent to play video recorded using our provider
@@ -253,9 +254,18 @@ class DebugCameraFragment : Fragment() {
             )
         }
 
+        // Unlocks screen rotation after recording finished
+        requireActivity().requestedOrientation =
+            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+
         // Finishes our current camera screen
         delay(DebugCameraActivity.ANIMATION_SLOW_MILLIS)
     }
+
+//    private val mOnPreviewAvailableListener =
+//        OnImageAvailableListener { reader ->
+//            logI { "Next frame" }
+//        }
 
     /**
      * Begin all camera operations in a coroutine in the main thread. This function:
@@ -268,6 +278,18 @@ class DebugCameraFragment : Fragment() {
 
         // Open the selected camera
         camera = openCamera(cameraManager, cameraId, cameraHandler)
+
+//        val mImageReaderPreview = ImageReader.newInstance(
+//            640,
+//            480,
+//            ImageFormat.YUV_420_888,
+//            1
+//        )
+//        mImageReaderPreview.setOnImageAvailableListener(
+//            mOnPreviewAvailableListener,
+//            null
+//        )
+
 
         // Creates list of Surfaces where the camera will output frames
         val targets = listOf(fragmentCameraBinding.viewFinder.holder.surface, recorderSurface)
