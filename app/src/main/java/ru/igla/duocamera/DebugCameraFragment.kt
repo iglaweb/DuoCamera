@@ -3,12 +3,9 @@ package ru.igla.duocamera
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
-import android.graphics.Color
 import android.graphics.ImageFormat
-import android.graphics.drawable.ColorDrawable
 import android.hardware.camera2.*
 import android.media.ImageReader
-import android.media.ImageReader.OnImageAvailableListener
 import android.media.MediaScannerConnection
 import android.os.Bundle
 import android.os.Handler
@@ -16,26 +13,24 @@ import android.os.HandlerThread
 import android.util.AttributeSet
 import android.util.Log
 import android.util.Range
+import android.util.Size
 import android.view.*
-import androidx.fragment.app.Fragment
+import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.*
 import ru.igla.duocamera.databinding.DebugCameraFragmentBinding
+import ru.igla.duocamera.ui.BaseFragment
 import ru.igla.duocamera.ui.FlashRecordAnimation
 import ru.igla.duocamera.ui.toastcompat.Toaster
-import ru.igla.duocamera.utils.IntentUtils
-import ru.igla.duocamera.utils.OrientationLiveData
-import ru.igla.duocamera.utils.ViewUtils
-import ru.igla.duocamera.utils.logI
+import ru.igla.duocamera.utils.*
+import java.util.*
+import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 
-class DebugCameraFragment : Fragment() {
+class DebugCameraFragment : BaseFragment() {
 
     private val flashRecordAnimation by lazy { FlashRecordAnimation() }
 
@@ -96,27 +91,12 @@ class DebugCameraFragment : Fragment() {
     /** [Handler] corresponding to [cameraThread] */
     private val cameraHandler = Handler(cameraThread.looper)
 
-    private val whiteDrawable by lazy {
-        ColorDrawable(Color.argb(150, 255, 255, 255))
+    private val recordBgThread by lazy {
+        Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     }
 
-    /** Performs recording animation of flashing screen */
-    private val animationTask: Runnable by lazy {
-        Runnable {
-            // Flash white animation
-            fragmentCameraBinding.overlay.foreground = whiteDrawable
-            // Wait for ANIMATION_FAST_MILLIS
-            fragmentCameraBinding.overlay.postDelayed({
-                // Remove white flash animation
-                fragmentCameraBinding.overlay.foreground = null
-                // Restart animation recursively
-                fragmentCameraBinding.overlay.postDelayed(
-                    animationTask,
-                    DebugCameraActivity.ANIMATION_FAST_MILLIS
-                )
-            }, DebugCameraActivity.ANIMATION_FAST_MILLIS)
-        }
-    }
+    private var recordingStatus = STATE_IDLE
+
 
     /** Captures frames from a [CameraDevice] for our video recording */
     private lateinit var session: CameraCaptureSession
@@ -130,6 +110,7 @@ class DebugCameraFragment : Fragment() {
         session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
             // Add the preview surface target
             addTarget(fragmentCameraBinding.viewFinder.holder.surface)
+            addTarget(imageReaderPreview!!.surface)
         }.build()
     }
 
@@ -166,6 +147,11 @@ class DebugCameraFragment : Fragment() {
         return fragmentCameraBinding.root
     }
 
+    /**
+     * The [android.util.Size] of camera preview.
+     */
+    lateinit var previewSize: Size
+
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -186,6 +172,8 @@ class DebugCameraFragment : Fragment() {
                     characteristics,
                     SurfaceHolder::class.java
                 )
+                this@DebugCameraFragment.previewSize = previewSize
+
                 Log.d(
                     TAG,
                     "View finder size: ${fragmentCameraBinding.viewFinder.width} x ${fragmentCameraBinding.viewFinder.height}"
@@ -209,7 +197,7 @@ class DebugCameraFragment : Fragment() {
         }
     }
 
-    private fun requestStartRecord() {
+    private suspend fun requestStartRecord() {
         // Prevents screen rotation during the video recording
         requireActivity().requestedOrientation =
             ActivityInfo.SCREEN_ORIENTATION_LOCKED
@@ -226,7 +214,7 @@ class DebugCameraFragment : Fragment() {
             mediaRecorderWrapper.startRecording(this)
         }
 
-        ViewUtils.runOnUiThread {
+        withContext(Dispatchers.Main) {
             flashRecordAnimation.startAnim(fragmentCameraBinding.captureButton)
         }
     }
@@ -243,8 +231,10 @@ class DebugCameraFragment : Fragment() {
             null
         )
 
-        ViewUtils.runOnUiThread {
+        withContext(Dispatchers.Main) {
             flashRecordAnimation.stopAnim()
+            fragmentCameraBinding.captureButton.clearAnimation()
+
             toaster.showToast("Video file ${mediaRecorderWrapper.outputFile.absolutePath}")
 
             // Launch external activity via intent to play video recorded using our provider
@@ -262,10 +252,50 @@ class DebugCameraFragment : Fragment() {
         delay(DebugCameraActivity.ANIMATION_SLOW_MILLIS)
     }
 
-//    private val mOnPreviewAvailableListener =
-//        OnImageAvailableListener { reader ->
-//            logI { "Next frame" }
-//        }
+    private val fpsMeasure by lazy {
+        FpsMeasure(3_000L)
+    }
+
+    private var frameNumber = 0
+
+    /**
+     * Capture the last FPS to allow debouncing to notify the consumer only when an FPS change is actually detected.
+     */
+    private var lastFPS = 0
+
+    private val previewAvailableListener =
+        ImageReader.OnImageAvailableListener { reader ->
+            val image = reader.acquireLatestImage() ?: return@OnImageAvailableListener
+            image.close()
+
+            val currentFps = fpsMeasure.calcFps().toInt()
+            logI { "Frame #${++frameNumber}, fps $currentFps" }
+            if (currentFps != lastFPS) {
+                onChangeFps(currentFps)
+                lastFPS = currentFps
+            }
+        }
+
+    private val textViewCamDetails by lazy {
+        if (cameraId == "0") {
+            activity?.findViewById<TextView>(R.id.textview_cam0_description)
+        } else {
+            activity?.findViewById<TextView>(R.id.textview_cam1_description)
+        }
+    }
+
+    private fun onChangeFps(fps: Int) {
+        lifecycleScope.launch(Dispatchers.Main) {
+            textViewCamDetails?.text = getString(R.string.camera_description).format(
+                Locale.US, cameraId, previewSize.toString(), fps
+            )
+        }
+    }
+
+    /**
+     * An [ImageReader] that handles live preview.
+     */
+    private var imageReaderPreview: ImageReader? = null
 
     /**
      * Begin all camera operations in a coroutine in the main thread. This function:
@@ -279,20 +309,25 @@ class DebugCameraFragment : Fragment() {
         // Open the selected camera
         camera = openCamera(cameraManager, cameraId, cameraHandler)
 
-//        val mImageReaderPreview = ImageReader.newInstance(
-//            640,
-//            480,
-//            ImageFormat.YUV_420_888,
-//            1
-//        )
-//        mImageReaderPreview.setOnImageAvailableListener(
-//            mOnPreviewAvailableListener,
-//            null
-//        )
+        imageReaderPreview = ImageReader.newInstance(
+            640,
+            480,
+            ImageFormat.YUV_420_888,
+            1
+        ).apply {
+            setOnImageAvailableListener(
+                previewAvailableListener,
+                null
+            )
+        }
 
 
         // Creates list of Surfaces where the camera will output frames
-        val targets = listOf(fragmentCameraBinding.viewFinder.holder.surface, recorderSurface)
+        val targets = listOf(
+            fragmentCameraBinding.viewFinder.holder.surface,
+            imageReaderPreview!!.surface,
+            recorderSurface
+        )
 
         // Start a capture session using our open camera and list of Surfaces where frames will go
         session = createCaptureSession(camera, targets, cameraHandler)
@@ -302,7 +337,7 @@ class DebugCameraFragment : Fragment() {
         session.setRepeatingRequest(previewRequest, null, cameraHandler)
 
         fragmentCameraBinding.captureButton.setOnClickListener { view ->
-            lifecycleScope.launch(Dispatchers.IO) {
+            lifecycleScope.launch(recordBgThread) {
                 if (recordingStatus == STATE_IDLE) {
                     recordingStatus = STATE_STARTING
                     requestStartRecord()
@@ -315,8 +350,6 @@ class DebugCameraFragment : Fragment() {
             }
         }
     }
-
-    private var recordingStatus = STATE_IDLE
 
     /** Opens the camera and returns the opened device (as the result of the suspend coroutine) */
     @SuppressLint("MissingPermission")

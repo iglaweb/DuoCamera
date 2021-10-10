@@ -4,7 +4,7 @@ package ru.igla.duocamera.utils;
 import ru.igla.duocamera.BuildConfig;
 
 @SuppressWarnings("ALL")
-public class Log {
+public final class Log {
     private static final String TAG = "DuoCamera";
 
     private static boolean ENABLED = BuildConfig.DEBUG;

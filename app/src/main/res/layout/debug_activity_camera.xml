@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_margin="8dp"
     android:orientation="vertical"
     tools:context=".DebugCameraActivity">
@@ -38,57 +38,69 @@
         android:layout_weight="1"
         android:orientation="horizontal">
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/fragment_container1"
-            android:name="ru.igla.duocamera.DebugCameraFragment"
+        <RelativeLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:keepScreenOn="true"
-            android:tag="camera1"
-            app:camera_name="camera0"
-            tools:context=".debug.multicamera.DebugCameraFragment"
-            tools:layout="@layout/debug_camera_fragment" />
+            android:orientation="vertical">
+
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/fragment_container1"
+                android:name="ru.igla.duocamera.DebugCameraFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/textview_cam0_description"
+                android:layout_alignParentTop="true"
+                android:layout_marginEnd="8dp"
+                android:keepScreenOn="true"
+                android:tag="camera1"
+                app:camera_name="camera0"
+                tools:context=".debug.multicamera.DebugCameraFragment"
+                tools:layout="@layout/debug_camera_fragment" />
+
+            <TextView
+                android:id="@+id/textview_cam0_description"
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:layout_alignParentBottom="true"
+                android:text="Cam 0: idle"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                tools:ignore="HardcodedText" />
+
+        </RelativeLayout>
 
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/fragment_container2"
-            app:camera_name="camera2"
-            android:name="ru.igla.duocamera.DebugCameraFragment"
+        <RelativeLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:keepScreenOn="true"
-            android:tag="camera1"
-            tools:context=".debug.multicamera.DebugCameraFragment"
-            tools:layout="@layout/debug_camera_fragment" />
+            android:orientation="vertical">
 
-    </androidx.appcompat.widget.LinearLayoutCompat>
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/fragment_container2"
+                android:name="ru.igla.duocamera.DebugCameraFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/textview_cam1_description"
+                android:layout_alignParentTop="true"
+                android:layout_marginEnd="8dp"
+                android:keepScreenOn="true"
+                android:tag="camera1"
+                app:camera_name="camera2"
+                tools:context=".debug.multicamera.DebugCameraFragment"
+                tools:layout="@layout/debug_camera_fragment" />
 
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+            <TextView
+                android:id="@+id/textview_cam1_description"
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:layout_alignParentBottom="true"
+                android:text="Cam 1: idle"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                tools:ignore="HardcodedText" />
 
-        <TextView
-            android:id="@+id/textview_cam0_description"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Cam 0: 30 fps"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-            tools:ignore="HardcodedText" />
+        </RelativeLayout>
 
-        <TextView
-            android:id="@+id/textview_cam1_description"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Cam 1: idle"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-            tools:ignore="HardcodedText" />
     </androidx.appcompat.widget.LinearLayoutCompat>
 
 </androidx.appcompat.widget.LinearLayoutCompat>

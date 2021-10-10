@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">DuoCamera</string>
     <string name="capture">Capture</string>
+
+    <string name="camera_description">Cam %1$s: %2$s, %3$d fps</string>
+    <string name="camera_description_idle">Cam %1$s: idle</string>
 </resources>
