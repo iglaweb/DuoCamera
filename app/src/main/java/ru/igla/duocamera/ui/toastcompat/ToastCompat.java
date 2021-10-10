@@ -18,15 +18,16 @@ import java.lang.reflect.Field;
  */
 public final class ToastCompat extends Toast {
 
-    private final @NonNull Toast toast;
+    private final @NonNull
+    Toast toast;
 
     /**
      * Construct an empty Toast object.  You must call {@link #setView} before you
      * can call {@link #show}.
      *
      * @param context The context to use.  Usually your {@link Application}
-     * or {@link Activity} object.
-     * @param base The base toast
+     *                or {@link Activity} object.
+     * @param base    The base toast
      */
     private ToastCompat(Context context, @NonNull Toast base) {
         super(context);
@@ -37,11 +38,11 @@ public final class ToastCompat extends Toast {
     /**
      * Make a standard toast that just contains a text view.
      *
-     * @param context The context to use.  Usually your {@link Application}
-     * or {@link Activity} object.
-     * @param text The text to show.  Can be formatted text.
+     * @param context  The context to use.  Usually your {@link Application}
+     *                 or {@link Activity} object.
+     * @param text     The text to show.  Can be formatted text.
      * @param duration How long to display the message.  Either {@link #LENGTH_SHORT} or
-     * {@link #LENGTH_LONG}
+     *                 {@link #LENGTH_LONG}
      */
     public static ToastCompat makeText(Context context, CharSequence text, int duration) {
         // We cannot pass the SafeToastContext to Toast.makeText() because
@@ -56,20 +57,21 @@ public final class ToastCompat extends Toast {
     /**
      * Make a standard toast that just contains a text view with the text from a resource.
      *
-     * @param context The context to use.  Usually your {@link Application}
-     * or {@link Activity} object.
-     * @param resId The resource id of the string resource to use.  Can be formatted text.
+     * @param context  The context to use.  Usually your {@link Application}
+     *                 or {@link Activity} object.
+     * @param resId    The resource id of the string resource to use.  Can be formatted text.
      * @param duration How long to display the message.  Either {@link #LENGTH_SHORT} or
-     * {@link #LENGTH_LONG}
+     *                 {@link #LENGTH_LONG}
      * @throws Resources.NotFoundException if the resource can't be found.
      */
     public static Toast makeText(Context context, @StringRes int resId, int duration)
-        throws Resources.NotFoundException {
+            throws Resources.NotFoundException {
         return makeText(context, context.getResources().getText(resId), duration);
     }
 
 
-    public @NonNull ToastCompat setBadTokenListener(@NonNull BadTokenListener listener) {
+    public @NonNull
+    ToastCompat setBadTokenListener(@NonNull BadTokenListener listener) {
         ((SafeToastContext) getView().getContext()).setBadTokenListener(listener);
         return this;
     }
@@ -160,7 +162,8 @@ public final class ToastCompat extends Toast {
     }
 
 
-    public @NonNull Toast getBaseToast() {
+    public @NonNull
+    Toast getBaseToast() {
         return toast;
     }
 

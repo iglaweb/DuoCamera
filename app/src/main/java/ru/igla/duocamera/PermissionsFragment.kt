@@ -24,13 +24,13 @@ private val PERMISSIONS_REQUIRED = arrayOf(
  */
 class PermissionsFragment : BaseFragment() {
 
-    private var mListener: OnBackFragmentGoListener? = null
+    private var onBackFragmentGoListener: OnBackFragmentGoListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (hasPermissions(requireContext())) {
             // If permissions have already been granted, proceed
-            mListener?.onFinishFragment()
+            onBackFragmentGoListener?.onFinishFragment()
             activity?.supportFragmentManager?.popBackStack()
         } else {
             requestCameraPermission()
@@ -39,7 +39,7 @@ class PermissionsFragment : BaseFragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        mListener = try {
+        onBackFragmentGoListener = try {
             activity as OnBackFragmentGoListener
         } catch (e: ClassCastException) {
             throw ClassCastException("$activity must implement OnArticleSelectedListener")
@@ -75,7 +75,7 @@ class PermissionsFragment : BaseFragment() {
         if (requestCode == PERMISSIONS_REQUEST_CODE) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Takes the user to the success fragment when permission is granted
-                mListener?.onFinishFragment()
+                onBackFragmentGoListener?.onFinishFragment()
                 activity?.supportFragmentManager?.popBackStack()
             } else {
                 Toast.makeText(context, "Permission request denied", Toast.LENGTH_LONG).show()

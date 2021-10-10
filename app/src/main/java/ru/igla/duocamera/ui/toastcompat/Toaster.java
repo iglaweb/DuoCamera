@@ -38,7 +38,7 @@ public final class Toaster {
         return true;
     }
 
-    private void showToast(String text, int length) {
+    private void showToast(@NonNull String text, int length) {
         if (!isActivityAlive()) {
             return;
         }
@@ -53,13 +53,13 @@ public final class Toaster {
         }
     }
 
-    private void makeAndShowNewToast(String text, int length) {
+    private void makeAndShowNewToast(@NonNull String text, int length) {
         mToast = ToastCompat.makeText(mContext, text, length);
         mToast.show();
         mCurrentText = text;
     }
 
-    private boolean isSameToast(String text) {
+    private boolean isSameToast(@NonNull String text) {
         return mToast != null &&
                 !StringUtils.isNullOrEmpty(mCurrentText) &&
                 mCurrentText.equals(text);
@@ -77,14 +77,14 @@ public final class Toaster {
     /**
      * Show Toast with "long" duration.
      */
-    public void showToast(String text) {
+    public void showToast(@NonNull String text) {
         showToast(text, Toast.LENGTH_LONG);
     }
 
     /**
      * Show Toast with "short" duration.
      */
-    public void showShortToast(String text) {
+    public void showShortToast(@NonNull String text) {
         showToast(text, Toast.LENGTH_SHORT);
     }
 

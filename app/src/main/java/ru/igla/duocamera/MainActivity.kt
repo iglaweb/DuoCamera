@@ -1,7 +1,6 @@
 package ru.igla.duocamera
 
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
@@ -21,19 +20,14 @@ class MainActivity :
         }
 
         supportFragmentManager.commit {
-            Log.i(TAG, "replace<PermissionsFragment>")
+            logI { "replace<PermissionsFragment>" }
             replace<PermissionsFragment>(R.id.fragment_container, null, null)
         }
     }
-
-    companion object {
-        private val TAG = MainActivity::class.simpleName
-    }
-
+    
     override fun onFinishFragment() {
-        logI { "onFinishFragment" }
         supportFragmentManager.commit {
-            Log.i(TAG, "replace<SelectorFragment>")
+            logI { "replace<SelectorFragment>" }
             replace<SelectorFragment>(R.id.fragment_container, null, null)
         }
     }

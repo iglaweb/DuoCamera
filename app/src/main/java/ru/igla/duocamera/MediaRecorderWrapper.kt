@@ -4,11 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.media.MediaCodec
 import android.media.MediaRecorder
-import android.util.Log
 import android.view.Surface
 import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.delay
+import ru.igla.duocamera.utils.logD
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -28,8 +28,6 @@ class MediaRecorderWrapper(val context: Context) {
     var outputFile: File = createFile(context, "mp4")
 
     companion object {
-
-        private val TAG = MediaRecorderWrapper::class.java.simpleName
 
         private const val MIN_REQUIRED_RECORDING_TIME_MILLIS: Long = 1000L
 
@@ -82,8 +80,7 @@ class MediaRecorderWrapper(val context: Context) {
             delay(MIN_REQUIRED_RECORDING_TIME_MILLIS - elapsedTimeMillis)
         }
 
-        Log.d(TAG, "Recording stopped. Output file: $outputFile")
-
+        logD { "Recording stopped. Output file: $outputFile" }
         recorder?.stop()
     }
 
@@ -111,6 +108,6 @@ class MediaRecorderWrapper(val context: Context) {
             start()
         }
         recordingStartMillis = System.currentTimeMillis()
-        Log.d(TAG, "Recording started")
+        logD { "Recording started" }
     }
 }

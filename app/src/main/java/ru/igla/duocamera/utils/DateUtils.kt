@@ -3,8 +3,8 @@ package ru.igla.duocamera.utils
 import java.util.concurrent.TimeUnit
 
 /**
- * Created by lashkov on 13/02/16.
- * Copyright (c) 2016 igla LLC. All rights reserved.
+ * Created by lashkov on 10/10/21.
+ * Copyright (c) 2021 igla LLC. All rights reserved.
  */
 object DateUtils {
 
