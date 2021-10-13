@@ -19,6 +19,8 @@ class SmartSize(width: Int, height: Int) {
 /** Standard High Definition size for pictures and video */
 val SIZE_1080P: SmartSize = SmartSize(1920, 1080)
 
+val SIZE_VGA: SmartSize = SmartSize(640, 480)
+
 /** Returns a [SmartSize] object for the given [Display] */
 fun getDisplaySmartSize(display: Display): SmartSize {
     val outPoint = Point()
@@ -31,17 +33,34 @@ fun getDisplaySmartSize(display: Display): SmartSize {
  * https://d.android.com/reference/android/hardware/camera2/CameraDevice and
  * https://developer.android.com/reference/android/hardware/camera2/params/StreamConfigurationMap
  */
-fun <T> getPreviewOutputSize(
+fun <T> getMaxPreviewOutputSize(
     display: Display,
     characteristics: CameraCharacteristics,
     targetClass: Class<T>,
     format: Int? = null
 ): Size {
-
     // Find which is smaller: screen or 1080p
     val screenSize = getDisplaySmartSize(display)
     val hdScreen = screenSize.long >= SIZE_1080P.long || screenSize.short >= SIZE_1080P.short
     val maxSize = if (hdScreen) SIZE_1080P else screenSize
+
+    return getPreviewOutputSize(maxSize, characteristics, targetClass, format)
+}
+
+fun <T> getMinPreviewOutputSize(
+    characteristics: CameraCharacteristics,
+    targetClass: Class<T>,
+    format: Int? = null
+): Size {
+    return getPreviewOutputSize(SIZE_VGA, characteristics, targetClass, format)
+}
+
+fun <T> getPreviewOutputSize(
+    maxSize: SmartSize,
+    characteristics: CameraCharacteristics,
+    targetClass: Class<T>,
+    format: Int? = null
+): Size {
 
     // If image format is provided, use it to determine supported sizes; else use target class
     val config = characteristics.get(

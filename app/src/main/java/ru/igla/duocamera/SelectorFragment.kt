@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import ru.igla.duocamera.dto.CameraInfo
 import ru.igla.duocamera.ui.BaseFragment
 import ru.igla.duocamera.ui.GenericListAdapter
+import ru.igla.duocamera.utils.CameraReqType
 import ru.igla.duocamera.utils.CameraUtils
 import ru.igla.duocamera.utils.IntentUtils
 
@@ -61,6 +62,7 @@ class SelectorFragment : BaseFragment() {
     }
 
     companion object {
+
         /** Lists all video-capable cameras and supported resolution and FPS combinations */
         @SuppressLint("InlinedApi")
         private fun enumerateVideoCameras(cameraManager: CameraManager): List<CameraInfo> {
@@ -68,17 +70,19 @@ class SelectorFragment : BaseFragment() {
             availableCameras.apply {
                 add(
                     CameraInfo(
-                        "Minimum available size, 30 fps",
+                        CameraReqType.REQ_MIN_SIZE,
+                        "Min available size, 30 fps (${SIZE_VGA.long}x${SIZE_VGA.short})",
                         "0",
-                        Size(640, 480),
+                        Size(SIZE_VGA.long, SIZE_VGA.short),
                         30
                     )
                 )
                 add(
                     CameraInfo(
-                        "Maximum available size, 30 fps",
+                        CameraReqType.REQ_MAX_SIZE,
+                        "Max available size, 30 fps (${SIZE_1080P.long}x${SIZE_1080P.short})",
                         "0",
-                        Size(640, 480),
+                        Size(SIZE_1080P.long, SIZE_1080P.short),
                         30
                     )
                 )

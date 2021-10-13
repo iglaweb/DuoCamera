@@ -61,6 +61,7 @@ object CameraUtils {
                     val fpsLabel = if (fps > 0) "$fps" else "N/A"
                     availableCameras.add(
                         CameraInfo(
+                            CameraReqType.GENERAL_CAMERA_SIZE,
                             "$orientation ($id) $size $fpsLabel FPS", id, size, fps
                         )
                     )

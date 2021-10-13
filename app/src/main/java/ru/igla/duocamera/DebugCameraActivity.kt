@@ -1,6 +1,7 @@
 package ru.igla.duocamera;
 
 import android.os.Bundle
+import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
 import ru.igla.duocamera.dto.CameraInfo
 import ru.igla.duocamera.dto.CameraInfoExt
@@ -13,9 +14,13 @@ class DebugCameraActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        setContentView(R.layout.debug_activity_camera)
+        actionBar?.hide()
+        supportActionBar?.hide()
+
         cameraInfo = requireNotNull(intent.getParcelableExtra(CAMERA_INFO_OBJ))
         logI { "Camera info: $cameraInfo" }
-        setContentView(R.layout.debug_activity_camera)
 
         if (savedInstanceState == null) {
             supportFragmentManager.apply {

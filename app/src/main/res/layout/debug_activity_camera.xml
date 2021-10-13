@@ -48,7 +48,7 @@
                 android:id="@+id/fragment_container1"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_above="@+id/textview_cam0_description"
+                android:layout_above="@+id/textContainer0"
                 android:layout_alignParentTop="true"
                 android:layout_marginEnd="8dp"
                 android:keepScreenOn="true"
@@ -57,14 +57,32 @@
                 tools:context=".debug.multicamera.DebugCameraFragment"
                 tools:layout="@layout/debug_camera_fragment" />
 
-            <TextView
-                android:id="@+id/textview_cam0_description"
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/textContainer0"
                 android:layout_width="match_parent"
-                android:layout_height="42dp"
+                android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
-                android:text="Cam 0: idle"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                tools:ignore="HardcodedText" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/textview_cam0_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    android:text="Cam 0: idle"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                    android:textSize="15sp"
+                    tools:ignore="HardcodedText" />
+
+                <Chronometer
+                    android:id="@+id/c_meter_0"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
 
         </RelativeLayout>
 
@@ -79,7 +97,7 @@
                 android:id="@+id/fragment_container2"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_above="@+id/textview_cam1_description"
+                android:layout_above="@+id/textContainer1"
                 android:layout_alignParentTop="true"
                 android:layout_marginEnd="8dp"
                 android:keepScreenOn="true"
@@ -88,14 +106,32 @@
                 tools:context=".debug.multicamera.DebugCameraFragment"
                 tools:layout="@layout/debug_camera_fragment" />
 
-            <TextView
-                android:id="@+id/textview_cam1_description"
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/textContainer1"
                 android:layout_width="match_parent"
-                android:layout_height="42dp"
+                android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
-                android:text="Cam 1: idle"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                tools:ignore="HardcodedText" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/textview_cam1_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    android:layout_alignParentBottom="true"
+                    android:text="Cam 1: idle"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                    tools:ignore="HardcodedText" />
+
+
+                <Chronometer
+                    android:id="@+id/c_meter_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
 
         </RelativeLayout>
 

@@ -2,7 +2,6 @@ package ru.igla.duocamera
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.ActivityInfo
 import android.graphics.ImageFormat
 import android.hardware.camera2.*
 import android.media.ImageReader
@@ -10,11 +9,13 @@ import android.media.MediaScannerConnection
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.SystemClock
 import android.util.AttributeSet
 import android.util.Log
 import android.util.Range
 import android.util.Size
 import android.view.*
+import android.widget.Chronometer
 import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.*
@@ -196,11 +197,7 @@ class DebugCameraFragment : BaseFragment() {
 
             override fun surfaceCreated(holder: SurfaceHolder) {
                 // Selects appropriate preview size and configures view finder
-                val previewSize = getPreviewOutputSize(
-                    fragmentCameraBinding.viewFinder.display,
-                    characteristics,
-                    SurfaceHolder::class.java
-                )
+                val previewSize = fetchPreviewSize()
                 this@DebugCameraFragment.previewSize = previewSize
 
                 Log.d(
@@ -226,11 +223,28 @@ class DebugCameraFragment : BaseFragment() {
         }
     }
 
-    private suspend fun requestStartRecord() {
-        // Prevents screen rotation during the video recording
-        requireActivity().requestedOrientation =
-            ActivityInfo.SCREEN_ORIENTATION_LOCKED
+    private fun fetchPreviewSize(): Size {
+        when (cameraInfoExt?.cameraInfo?.cameraReqType) {
+            CameraReqType.GENERAL_CAMERA_SIZE -> {
+                return cameraInfoExt?.cameraInfo?.size!!
+            }
+            CameraReqType.REQ_MIN_SIZE -> {
+                return getMinPreviewOutputSize(
+                    characteristics,
+                    SurfaceHolder::class.java
+                )
+            }
+            else -> {
+                return getMaxPreviewOutputSize(
+                    fragmentCameraBinding.viewFinder.display,
+                    characteristics,
+                    SurfaceHolder::class.java
+                )
+            }
+        }
+    }
 
+    private suspend fun requestStartRecord() {
         // Start recording repeating requests, which will stop the ongoing preview
         //  repeating requests without having to explicitly call `session.stopRepeating`
         session.setRepeatingRequest(recordRequest, null, cameraHandler)
@@ -244,6 +258,13 @@ class DebugCameraFragment : BaseFragment() {
         }
 
         withContext(Dispatchers.Main) {
+            chronoMeter?.apply {
+                base = SystemClock.elapsedRealtime()
+                start()
+                setOnChronometerTickListener {
+                    append(" (record)")
+                }
+            }
             flashRecordAnimation.startAnim(fragmentCameraBinding.captureButton)
         }
     }
@@ -261,21 +282,25 @@ class DebugCameraFragment : BaseFragment() {
         )
 
         withContext(Dispatchers.Main) {
+            chronoMeter?.stop()
             flashRecordAnimation.stopAnim()
-            fragmentCameraBinding.captureButton.clearAnimation()
+            fragmentCameraBinding.captureButton.apply {
+                clearAnimation()
+                //restore
+                visibility = View.VISIBLE
+                alpha = 1.0f
+            }
 
             toaster.showToast("Video file ${mediaRecorderWrapper.outputFile.absolutePath}")
 
             // Launch external activity via intent to play video recorded using our provider
-            IntentUtils.startActivitySafely(
-                view.context,
-                mediaRecorderWrapper.resolveIntentFile()
-            )
+            if (CHOOSE_FILE_SAVE_DST) {
+                IntentUtils.startActivitySafely(
+                    view.context,
+                    mediaRecorderWrapper.resolveIntentFile()
+                )
+            }
         }
-
-        // Unlocks screen rotation after recording finished
-        requireActivity().requestedOrientation =
-            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
         // Finishes our current camera screen
         delay(DebugCameraActivity.ANIMATION_SLOW_MILLIS)
@@ -299,6 +324,14 @@ class DebugCameraFragment : BaseFragment() {
             activity?.findViewById(R.id.textview_cam0_description)
         } else {
             activity?.findViewById(R.id.textview_cam1_description)
+        }
+    }
+
+    private val chronoMeter: Chronometer? by lazy {
+        if (cameraId == "0") {
+            activity?.findViewById(R.id.c_meter_0)
+        } else {
+            activity?.findViewById(R.id.c_meter_1)
         }
     }
 
@@ -439,6 +472,7 @@ class DebugCameraFragment : BaseFragment() {
 
     override fun onDestroyView() {
         ViewUtils.cancelCallbacks()
+        chronoMeter?.onChronometerTickListener = null
         _fragmentCameraBinding = null
         super.onDestroyView()
     }
@@ -446,6 +480,8 @@ class DebugCameraFragment : BaseFragment() {
     companion object {
         private val TAG = DebugCameraFragment::class.java.simpleName
         const val CAMERA_INFO_EXT = "camera_obj_extra"
+
+        private const val CHOOSE_FILE_SAVE_DST = false
 
         private const val STATE_IDLE = 0
         private const val STATE_RECORDING = 1

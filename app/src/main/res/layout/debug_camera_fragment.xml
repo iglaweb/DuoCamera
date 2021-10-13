@@ -8,12 +8,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <View
-        android:id="@+id/overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:foreground="@android:color/transparent" />
-
     <ImageButton
         android:id="@+id/capture_button"
         android:layout_width="64dp"

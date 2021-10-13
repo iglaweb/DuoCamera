@@ -66,7 +66,7 @@
         <activity
             android:name=".DebugCameraActivity"
             android:label="DuoCamera Test"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="landscape" />
 
     </application>
 
