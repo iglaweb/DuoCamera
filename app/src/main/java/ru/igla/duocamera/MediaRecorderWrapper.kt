@@ -13,11 +13,12 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MediaRecorderWrapper(val context: Context) {
-
-    private var fps = 30
-    private var videoWidth = 640
-    private var videoHeight = 480
+class MediaRecorderWrapper(
+    val context: Context,
+    private val fps: Int = 30,
+    private val videoWidth: Int = 640,
+    private val videoHeight: Int = 480
+) {
 
     private var recordingStartMillis: Long = 0L
 

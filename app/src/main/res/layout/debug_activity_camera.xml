@@ -46,14 +46,13 @@
 
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/fragment_container1"
-                android:name="ru.igla.duocamera.DebugCameraFragment"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_above="@+id/textview_cam0_description"
                 android:layout_alignParentTop="true"
                 android:layout_marginEnd="8dp"
                 android:keepScreenOn="true"
-                android:tag="camera1"
+                android:tag="camera0"
                 app:camera_name="camera0"
                 tools:context=".debug.multicamera.DebugCameraFragment"
                 tools:layout="@layout/debug_camera_fragment" />
@@ -78,7 +77,6 @@
 
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/fragment_container2"
-                android:name="ru.igla.duocamera.DebugCameraFragment"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_above="@+id/textview_cam1_description"
@@ -86,7 +84,7 @@
                 android:layout_marginEnd="8dp"
                 android:keepScreenOn="true"
                 android:tag="camera1"
-                app:camera_name="camera2"
+                app:camera_name="camera1"
                 tools:context=".debug.multicamera.DebugCameraFragment"
                 tools:layout="@layout/debug_camera_fragment" />
 

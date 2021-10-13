@@ -19,6 +19,7 @@ import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.*
 import ru.igla.duocamera.databinding.DebugCameraFragmentBinding
+import ru.igla.duocamera.dto.CameraInfoExt
 import ru.igla.duocamera.ui.BaseFragment
 import ru.igla.duocamera.ui.FlashRecordAnimation
 import ru.igla.duocamera.ui.toastcompat.Toaster
@@ -36,31 +37,31 @@ class DebugCameraFragment : BaseFragment() {
 
     private val toaster: Toaster by lazy { Toaster(requireContext().applicationContext) }
 
+    private var cameraInfoExt: CameraInfoExt? = null
     private var cameraId = "0"
     private var fps = 30
 
     // your fragment parameter, a string
     private var cameraName: String? = null
 
-    /**
-     * Parse attributes during inflation from a view hierarchy into the
-     * arguments we handle.
-     */
-    override fun onInflate(context: Context, attrs: AttributeSet, savedInstanceState: Bundle?) {
-        super.onInflate(context, attrs, savedInstanceState)
-        logI { "OnInflate" }
-        if (cameraName == null) {
-            context.obtainStyledAttributes(attrs, R.styleable.CameraDebugFragment_Args).apply {
-                if (hasValue(R.styleable.CameraDebugFragment_Args_camera_name)) {
-                    cameraName = getString(R.styleable.CameraDebugFragment_Args_camera_name)
-                }
-                recycle()
-            }
-        }
-        cameraName?.apply {
-            cameraId = if (cameraName.equals("camera0")) "0" else "1"
-        }
+    private val fpsMeasure by lazy {
+        FpsMeasure(3_000L)
     }
+
+    private var frameNumber = 0
+
+    /**
+     * Capture the last FPS to allow debouncing to notify the consumer only when an FPS change is actually detected.
+     */
+    private var lastFPS = 0
+
+    private var recordingStatus = STATE_IDLE
+
+    /**
+     * An [ImageReader] that handles live preview.
+     */
+    private var imageReaderPreview: ImageReader? = null
+
 
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
     private val cameraManager: CameraManager by lazy {
@@ -95,8 +96,6 @@ class DebugCameraFragment : BaseFragment() {
         Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     }
 
-    private var recordingStatus = STATE_IDLE
-
 
     /** Captures frames from a [CameraDevice] for our video recording */
     private lateinit var session: CameraCaptureSession
@@ -110,7 +109,9 @@ class DebugCameraFragment : BaseFragment() {
         session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
             // Add the preview surface target
             addTarget(fragmentCameraBinding.viewFinder.holder.surface)
-            addTarget(imageReaderPreview!!.surface)
+            imageReaderPreview?.let {
+                addTarget(it.surface)
+            }
         }.build()
     }
 
@@ -126,6 +127,11 @@ class DebugCameraFragment : BaseFragment() {
         }.build()
     }
 
+    /**
+     * The [android.util.Size] of camera preview.
+     */
+    lateinit var previewSize: Size
+
     /** Live data listener for changes in the device orientation relative to the camera */
     private lateinit var relativeOrientation: OrientationLiveData
 
@@ -135,22 +141,45 @@ class DebugCameraFragment : BaseFragment() {
 
     private val fragmentCameraBinding get() = _fragmentCameraBinding!!
 
+    /**
+     * Only called when initializing via xml
+     * Parse attributes during inflation from a view hierarchy into the
+     * arguments we handle.
+     */
+    override fun onInflate(context: Context, attrs: AttributeSet, savedInstanceState: Bundle?) {
+        super.onInflate(context, attrs, savedInstanceState)
+        logI { "OnInflate" }
+        if (cameraName == null) {
+            context.obtainStyledAttributes(attrs, R.styleable.CameraDebugFragment_Args).apply {
+                if (hasValue(R.styleable.CameraDebugFragment_Args_camera_name)) {
+                    cameraName = getString(R.styleable.CameraDebugFragment_Args_camera_name)
+                    cameraName?.apply {
+                        cameraId = if (cameraName.equals("camera0")) "0" else "1"
+                    }
+                }
+                recycle()
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        arguments?.apply {
+            cameraInfoExt = getParcelable(CAMERA_INFO_EXT)
+            cameraInfoExt?.let {
+                cameraId = it.cameraRequestId
+            }
+        }
         _fragmentCameraBinding = DebugCameraFragmentBinding.inflate(
             inflater,
-            container, false
+            container,
+            false
         )
         return fragmentCameraBinding.root
     }
-
-    /**
-     * The [android.util.Size] of camera preview.
-     */
-    lateinit var previewSize: Size
 
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -252,17 +281,6 @@ class DebugCameraFragment : BaseFragment() {
         delay(DebugCameraActivity.ANIMATION_SLOW_MILLIS)
     }
 
-    private val fpsMeasure by lazy {
-        FpsMeasure(3_000L)
-    }
-
-    private var frameNumber = 0
-
-    /**
-     * Capture the last FPS to allow debouncing to notify the consumer only when an FPS change is actually detected.
-     */
-    private var lastFPS = 0
-
     private val previewAvailableListener =
         ImageReader.OnImageAvailableListener { reader ->
             val image = reader.acquireLatestImage() ?: return@OnImageAvailableListener
@@ -276,11 +294,11 @@ class DebugCameraFragment : BaseFragment() {
             }
         }
 
-    private val textViewCamDetails by lazy {
+    private val textViewCamDetails: TextView? by lazy {
         if (cameraId == "0") {
-            activity?.findViewById<TextView>(R.id.textview_cam0_description)
+            activity?.findViewById(R.id.textview_cam0_description)
         } else {
-            activity?.findViewById<TextView>(R.id.textview_cam1_description)
+            activity?.findViewById(R.id.textview_cam1_description)
         }
     }
 
@@ -293,11 +311,6 @@ class DebugCameraFragment : BaseFragment() {
     }
 
     /**
-     * An [ImageReader] that handles live preview.
-     */
-    private var imageReaderPreview: ImageReader? = null
-
-    /**
      * Begin all camera operations in a coroutine in the main thread. This function:
      * - Opens the camera
      * - Configures the camera session
@@ -305,7 +318,6 @@ class DebugCameraFragment : BaseFragment() {
      */
     @SuppressLint("ClickableViewAccessibility")
     private fun initializeCamera() = lifecycleScope.launch(Dispatchers.Main) {
-
         // Open the selected camera
         camera = openCamera(cameraManager, cameraId, cameraHandler)
 
@@ -320,7 +332,6 @@ class DebugCameraFragment : BaseFragment() {
                 null
             )
         }
-
 
         // Creates list of Surfaces where the camera will output frames
         val targets = listOf(
@@ -337,16 +348,20 @@ class DebugCameraFragment : BaseFragment() {
         session.setRepeatingRequest(previewRequest, null, cameraHandler)
 
         fragmentCameraBinding.captureButton.setOnClickListener { view ->
-            lifecycleScope.launch(recordBgThread) {
-                if (recordingStatus == STATE_IDLE) {
-                    recordingStatus = STATE_STARTING
-                    requestStartRecord()
-                    recordingStatus = STATE_RECORDING
-                } else if (recordingStatus == STATE_RECORDING) {
-                    recordingStatus = STATE_STOPPING
-                    requestStopRecording(view)
-                    recordingStatus = STATE_IDLE
-                }
+            onClickCaptureBtn(view)
+        }
+    }
+
+    private fun onClickCaptureBtn(view: View) {
+        lifecycleScope.launch(recordBgThread) {
+            if (recordingStatus == STATE_IDLE) {
+                recordingStatus = STATE_STARTING
+                requestStartRecord()
+                recordingStatus = STATE_RECORDING
+            } else if (recordingStatus == STATE_RECORDING) {
+                recordingStatus = STATE_STOPPING
+                requestStopRecording(view)
+                recordingStatus = STATE_IDLE
             }
         }
     }
@@ -430,6 +445,7 @@ class DebugCameraFragment : BaseFragment() {
 
     companion object {
         private val TAG = DebugCameraFragment::class.java.simpleName
+        const val CAMERA_INFO_EXT = "camera_obj_extra"
 
         private const val STATE_IDLE = 0
         private const val STATE_RECORDING = 1

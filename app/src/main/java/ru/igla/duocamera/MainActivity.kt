@@ -24,7 +24,7 @@ class MainActivity :
             replace<PermissionsFragment>(R.id.fragment_container, null, null)
         }
     }
-    
+
     override fun onFinishFragment() {
         supportFragmentManager.commit {
             logI { "replace<SelectorFragment>" }
