@@ -8,6 +8,7 @@
 
 Android application to preview, record (MediaRecorder) and fetch each image from both front and rear cameras simultaneously. The application uses Camera2 API.
 
+![Preview-demo](art/duocamera_preview.gif "Preview demo")<br />
 
 ## Hardware Dependencies
 Some hardwares are not capable enough to give previews from both front and rear cameras simultaneously.
