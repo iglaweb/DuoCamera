@@ -1,8 +1,9 @@
-package ru.igla.duocamera;
+package ru.igla.duocamera.ui;
 
 import android.os.Bundle
 import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
+import ru.igla.duocamera.R
 import ru.igla.duocamera.dto.CameraInfo
 import ru.igla.duocamera.dto.CameraInfoExt
 import ru.igla.duocamera.utils.logI

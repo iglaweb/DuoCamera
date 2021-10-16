@@ -1,20 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ru.igla.duocamera.ui.AutoFitSurfaceView
-        android:id="@+id/view_finder"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_above="@+id/textContainer0"
+        android:layout_alignParentTop="true">
 
-    <ImageButton
-        android:id="@+id/capture_button"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_gravity="bottom|center"
-        android:background="@drawable/ic_shutter"
-        android:contentDescription="@string/capture"
-        android:scaleType="fitCenter" />
+        <ru.igla.duocamera.ui.AutoFitSurfaceView
+            android:id="@+id/view_finder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
-</FrameLayout>
+        <ImageButton
+            android:id="@+id/capture_button"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="bottom|center"
+            android:background="@drawable/ic_shutter"
+            android:contentDescription="@string/capture"
+            android:scaleType="fitCenter" />
+
+    </FrameLayout>
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/textContainer0"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textview_cam_description"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:text="Cam 0: idle"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:textSize="15sp"
+            tools:ignore="HardcodedText" />
+
+        <Chronometer
+            android:id="@+id/c_meter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/black"
+            android:textSize="15sp" />
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+
+</RelativeLayout>

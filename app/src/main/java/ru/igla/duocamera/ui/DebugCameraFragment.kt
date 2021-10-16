@@ -1,4 +1,4 @@
-package ru.igla.duocamera
+package ru.igla.duocamera.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -15,10 +15,9 @@ import android.util.Log
 import android.util.Range
 import android.util.Size
 import android.view.*
-import android.widget.Chronometer
-import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.*
+import ru.igla.duocamera.R
 import ru.igla.duocamera.databinding.DebugCameraFragmentBinding
 import ru.igla.duocamera.dto.CameraInfoExt
 import ru.igla.duocamera.ui.BaseFragment
@@ -258,7 +257,7 @@ class DebugCameraFragment : BaseFragment() {
         }
 
         withContext(Dispatchers.Main) {
-            chronoMeter?.apply {
+            fragmentCameraBinding.cMeter.apply {
                 base = SystemClock.elapsedRealtime()
                 start()
                 setOnChronometerTickListener {
@@ -282,7 +281,7 @@ class DebugCameraFragment : BaseFragment() {
         )
 
         withContext(Dispatchers.Main) {
-            chronoMeter?.stop()
+            fragmentCameraBinding.cMeter.stop()
             flashRecordAnimation.stopAnim()
             fragmentCameraBinding.captureButton.apply {
                 clearAnimation()
@@ -319,27 +318,12 @@ class DebugCameraFragment : BaseFragment() {
             }
         }
 
-    private val textViewCamDetails: TextView? by lazy {
-        if (cameraId == "0") {
-            activity?.findViewById(R.id.textview_cam0_description)
-        } else {
-            activity?.findViewById(R.id.textview_cam1_description)
-        }
-    }
-
-    private val chronoMeter: Chronometer? by lazy {
-        if (cameraId == "0") {
-            activity?.findViewById(R.id.c_meter_0)
-        } else {
-            activity?.findViewById(R.id.c_meter_1)
-        }
-    }
-
     private fun onChangeFps(fps: Int) {
         lifecycleScope.launch(Dispatchers.Main) {
-            textViewCamDetails?.text = getString(R.string.camera_description).format(
-                Locale.US, cameraId, previewSize.toString(), fps
-            )
+            fragmentCameraBinding.textviewCamDescription.text =
+                getString(R.string.camera_description).format(
+                    Locale.US, cameraId, previewSize.toString(), fps
+                )
         }
     }
 
@@ -472,7 +456,7 @@ class DebugCameraFragment : BaseFragment() {
 
     override fun onDestroyView() {
         ViewUtils.cancelCallbacks()
-        chronoMeter?.onChronometerTickListener = null
+        fragmentCameraBinding.cMeter.onChronometerTickListener = null
         _fragmentCameraBinding = null
         super.onDestroyView()
     }

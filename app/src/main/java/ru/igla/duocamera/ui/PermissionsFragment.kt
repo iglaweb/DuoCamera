@@ -1,28 +1,23 @@
-package ru.igla.duocamera
+package ru.igla.duocamera.ui
 
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
 import ru.igla.duocamera.ui.BaseFragment
+import ru.igla.duocamera.ui.toastcompat.Toaster
 
-
-private const val PERMISSIONS_REQUEST_CODE = 10
-private val PERMISSIONS_REQUIRED = arrayOf(
-    Manifest.permission.CAMERA,
-    Manifest.permission.RECORD_AUDIO,
-    Manifest.permission.WRITE_EXTERNAL_STORAGE
-)
 
 /**
  * This [Fragment] requests permissions and, once granted, it will navigate to the next fragment
  */
 class PermissionsFragment : BaseFragment() {
+
+    private val toaster: Toaster by lazy { Toaster(requireContext().applicationContext) }
 
     private var onBackFragmentGoListener: OnBackFragmentGoListener? = null
 
@@ -78,12 +73,20 @@ class PermissionsFragment : BaseFragment() {
                 onBackFragmentGoListener?.onFinishFragment()
                 activity?.supportFragmentManager?.popBackStack()
             } else {
-                Toast.makeText(context, "Permission request denied", Toast.LENGTH_LONG).show()
+                toaster.showToast("Permission request denied")
             }
         }
     }
 
     companion object {
+
+
+        private const val PERMISSIONS_REQUEST_CODE = 10
+        private val PERMISSIONS_REQUIRED = arrayOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
 
         /** Convenience method used to check if all permissions required by this app are granted */
         fun hasPermissions(context: Context) = PERMISSIONS_REQUIRED.all {

@@ -1,4 +1,4 @@
-package ru.igla.duocamera
+package ru.igla.duocamera.ui
 
 import android.content.Context
 import android.content.Intent
@@ -8,6 +8,7 @@ import android.view.Surface
 import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.delay
+import ru.igla.duocamera.BuildConfig
 import ru.igla.duocamera.utils.logD
 import java.io.File
 import java.text.SimpleDateFormat

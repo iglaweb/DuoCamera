@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:layout_margin="8dp"
     android:orientation="vertical"
-    tools:context=".DebugCameraActivity">
+    tools:context=".ui.DebugCameraActivity">
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
@@ -38,102 +38,35 @@
         android:layout_weight="1"
         android:orientation="horizontal">
 
-        <RelativeLayout
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/fragment_container1"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:keepScreenOn="true"
+            android:orientation="vertical"
+            android:tag="camera0"
+            app:camera_name="camera0"
+            tools:context=".debug.multicamera.DebugCameraFragment"
+            tools:layout="@layout/debug_camera_fragment" />
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/fragment_container1"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_above="@+id/textContainer0"
-                android:layout_alignParentTop="true"
-                android:layout_marginEnd="8dp"
-                android:keepScreenOn="true"
-                android:tag="camera0"
-                app:camera_name="camera0"
-                tools:context=".debug.multicamera.DebugCameraFragment"
-                tools:layout="@layout/debug_camera_fragment" />
-
-            <androidx.appcompat.widget.LinearLayoutCompat
-                android:id="@+id/textContainer0"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/textview_cam0_description"
-                    android:layout_width="match_parent"
-                    android:layout_height="42dp"
-                    android:text="Cam 0: idle"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                    android:textSize="15sp"
-                    tools:ignore="HardcodedText" />
-
-                <Chronometer
-                    android:id="@+id/c_meter_0"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
-                    android:textColor="@color/black"
-                    android:textSize="15sp" />
-
-            </androidx.appcompat.widget.LinearLayoutCompat>
-
-
-        </RelativeLayout>
-
-
-        <RelativeLayout
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/fragment_container2"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:keepScreenOn="true"
+            android:orientation="vertical"
+            android:tag="camera1"
+            app:camera_name="camera1"
+            tools:context=".debug.multicamera.DebugCameraFragment"
+            tools:layout="@layout/debug_camera_fragment" />
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/fragment_container2"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_above="@+id/textContainer1"
-                android:layout_alignParentTop="true"
-                android:layout_marginEnd="8dp"
-                android:keepScreenOn="true"
-                android:tag="camera1"
-                app:camera_name="camera1"
-                tools:context=".debug.multicamera.DebugCameraFragment"
-                tools:layout="@layout/debug_camera_fragment" />
-
-            <androidx.appcompat.widget.LinearLayoutCompat
-                android:id="@+id/textContainer1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/textview_cam1_description"
-                    android:layout_width="match_parent"
-                    android:layout_height="42dp"
-                    android:layout_alignParentBottom="true"
-                    android:text="Cam 1: idle"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                    tools:ignore="HardcodedText" />
-
-
-                <Chronometer
-                    android:id="@+id/c_meter_1"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
-                    android:textColor="@color/black"
-                    android:textSize="15sp" />
-
-            </androidx.appcompat.widget.LinearLayoutCompat>
-
-        </RelativeLayout>
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 

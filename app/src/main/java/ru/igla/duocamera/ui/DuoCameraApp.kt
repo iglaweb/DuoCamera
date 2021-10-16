@@ -1,9 +1,10 @@
-package ru.igla.duocamera
+package ru.igla.duocamera.ui
 
 import android.annotation.SuppressLint
 import android.app.Application
 import android.os.StrictMode
 import android.os.StrictMode.VmPolicy
+import ru.igla.duocamera.BuildConfig
 import ru.igla.duocamera.utils.DevelopReportingTree
 import timber.log.Timber
 

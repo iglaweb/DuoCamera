@@ -1,4 +1,4 @@
-package ru.igla.duocamera
+package ru.igla.duocamera.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -14,11 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ru.igla.duocamera.dto.CameraInfo
-import ru.igla.duocamera.ui.BaseFragment
-import ru.igla.duocamera.ui.GenericListAdapter
-import ru.igla.duocamera.utils.CameraReqType
-import ru.igla.duocamera.utils.CameraUtils
-import ru.igla.duocamera.utils.IntentUtils
+import ru.igla.duocamera.utils.*
 
 
 /**

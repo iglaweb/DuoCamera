@@ -1,4 +1,4 @@
-package ru.igla.duocamera
+package ru.igla.duocamera.utils
 
 import android.graphics.Point
 import android.hardware.camera2.CameraCharacteristics

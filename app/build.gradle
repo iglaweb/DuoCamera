@@ -3,6 +3,7 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-kapt'
     id 'kotlin-parcelize'
+    id 'com.google.android.gms.oss-licenses-plugin'
 }
 
 android {
@@ -10,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId "ru.igla.duocamera"
-        minSdkVersion 21
+        minSdkVersion 23 //min api for mediarecorder
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -31,10 +32,6 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    dataBinding {
-        enabled true
-    }
-
     buildFeatures {
         viewBinding true
     }
@@ -66,6 +63,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
 
     implementation 'com.jakewharton.timber:timber:5.0.1'
+    implementation "com.google.android.gms:play-services-oss-licenses:17.0.0"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

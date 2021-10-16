@@ -4,4 +4,15 @@
 
     <string name="camera_description">Cam %1$s: %2$s, %3$d fps</string>
     <string name="camera_description_idle">Cam %1$s: idle</string>
+
+    <string name="about_license_title">Licenses</string>
+    <string name="settings">Settings</string>
+    <string name="about">About</string>
+    <string name="about_title">TFProfiler v%1$s</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="about_body"><![CDATA[
+        This project is <a href=\'https://github.com/iglaweb/DuoCamera\'>open source</a>, and is
+        licensed under Apache 2.0.
+       <br />
+  ]]></string>
 </resources>
