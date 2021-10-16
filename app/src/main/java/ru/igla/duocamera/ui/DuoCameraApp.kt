@@ -1,6 +1,5 @@
 package ru.igla.duocamera.ui
 
-import android.annotation.SuppressLint
 import android.app.Application
 import android.os.StrictMode
 import android.os.StrictMode.VmPolicy
@@ -16,7 +15,6 @@ class DuoCameraApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        sInstance = this
         if (BuildConfig.DEBUG) {
             Timber.plant(DevelopReportingTree())
         }
@@ -42,12 +40,5 @@ class DuoCameraApp : Application() {
 
     companion object {
         private const val enableStrictMode = false
-
-        @SuppressLint("StaticFieldLeak")
-        private lateinit var sInstance: DuoCameraApp
-
-        @get:Synchronized
-        val instance: DuoCameraApp
-            get() = sInstance
     }
 }

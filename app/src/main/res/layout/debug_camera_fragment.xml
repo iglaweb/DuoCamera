@@ -11,7 +11,7 @@
         android:layout_above="@+id/textContainer0"
         android:layout_alignParentTop="true">
 
-        <ru.igla.duocamera.ui.AutoFitSurfaceView
+        <ru.igla.duocamera.ui.widgets.AutoFitSurfaceView
             android:id="@+id/view_finder"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

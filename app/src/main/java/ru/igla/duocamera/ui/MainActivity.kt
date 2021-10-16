@@ -11,7 +11,7 @@ import androidx.fragment.app.commit
 import androidx.fragment.app.replace
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import ru.igla.duocamera.R
-import ru.igla.duocamera.ui.AboutDialog
+import ru.igla.duocamera.ui.widgets.AboutDialog
 import ru.igla.duocamera.utils.logI
 
 

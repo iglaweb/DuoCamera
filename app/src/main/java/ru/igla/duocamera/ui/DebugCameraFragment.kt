@@ -20,8 +20,6 @@ import kotlinx.coroutines.*
 import ru.igla.duocamera.R
 import ru.igla.duocamera.databinding.DebugCameraFragmentBinding
 import ru.igla.duocamera.dto.CameraInfoExt
-import ru.igla.duocamera.ui.BaseFragment
-import ru.igla.duocamera.ui.FlashRecordAnimation
 import ru.igla.duocamera.ui.toastcompat.Toaster
 import ru.igla.duocamera.utils.*
 import java.util.*
@@ -339,8 +337,8 @@ class DebugCameraFragment : BaseFragment() {
         camera = openCamera(cameraManager, cameraId, cameraHandler)
 
         imageReaderPreview = ImageReader.newInstance(
-            640,
-            480,
+            imageRetrieveSize.width,
+            imageRetrieveSize.height,
             ImageFormat.YUV_420_888,
             1
         ).apply {
@@ -471,5 +469,7 @@ class DebugCameraFragment : BaseFragment() {
         private const val STATE_RECORDING = 1
         private const val STATE_STARTING = 1
         private const val STATE_STOPPING = 2
+
+        private val imageRetrieveSize = Size(640, 480)
     }
 }

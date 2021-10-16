@@ -1,4 +1,4 @@
-package ru.igla.duocamera.ui
+package ru.igla.duocamera.ui.widgets
 
 import android.view.LayoutInflater
 import android.view.View

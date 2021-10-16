@@ -1,4 +1,4 @@
-package ru.igla.duocamera.ui
+package ru.igla.duocamera.ui.widgets
 
 import android.app.Dialog
 import android.os.Build
@@ -24,12 +24,11 @@ class AboutDialog : DialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val context = activity ?: throw IllegalStateException("No activity provided!")
         val body = String.format(
             Locale.US,
             getString(R.string.about_body)
         )
-        return AlertDialog.Builder(context)
+        return AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.about_title, BuildConfig.VERSION_NAME))
             .setMessage(fromHtml(body))
             .setCancelable(true)

@@ -1,5 +1,6 @@
 package ru.igla.duocamera.ui
 
+import android.R
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -11,9 +12,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.igla.duocamera.dto.CameraInfo
+import ru.igla.duocamera.ui.toastcompat.Toaster
+import ru.igla.duocamera.ui.widgets.GenericListAdapter
 import ru.igla.duocamera.utils.*
 
 
@@ -22,6 +29,8 @@ import ru.igla.duocamera.utils.*
  * speed video recording
  */
 class SelectorFragment : BaseFragment() {
+
+    private val toaster: Toaster by lazy { Toaster(requireContext().applicationContext) }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,25 +45,32 @@ class SelectorFragment : BaseFragment() {
         view.apply {
             layoutManager = LinearLayoutManager(requireContext())
 
-            val cameraManager =
-                requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager
-            val cameraList = enumerateVideoCameras(cameraManager)
-
-            val layoutId = android.R.layout.simple_list_item_1
-            adapter = GenericListAdapter(cameraList, itemLayoutId = layoutId) { view, item, _ ->
-                view.findViewById<TextView>(android.R.id.text1).text = item.name
-                view.setOnClickListener {
-                    onClick(item)
+            lifecycleScope.launch(Dispatchers.Default) {
+                val cameraManager =
+                    requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager
+                val cameraList = enumerateVideoCameras(cameraManager)
+                withContext(Dispatchers.Main) {
+                    if (cameraList.isEmpty()) {
+                        toaster.showToast("No camera preview sizes available")
+                    }
+                    val layoutId = android.R.layout.simple_list_item_1
+                    adapter =
+                        GenericListAdapter(cameraList, itemLayoutId = layoutId) { view, item, _ ->
+                            view.findViewById<TextView>(R.id.text1).text = item.name
+                            view.setOnClickListener {
+                                onClick(item)
+                            }
+                        }
                 }
             }
         }
     }
 
     private fun onClick(item: CameraInfo) {
-        val intent = Intent(context, DebugCameraActivity::class.java).apply {
+        Intent(context, DebugCameraActivity::class.java).apply {
             putExtra(DebugCameraActivity.CAMERA_INFO_OBJ, item)
+            IntentUtils.startActivitySafely(requireContext(), this)
         }
-        IntentUtils.startActivitySafely(requireContext(), intent)
     }
 
     companion object {

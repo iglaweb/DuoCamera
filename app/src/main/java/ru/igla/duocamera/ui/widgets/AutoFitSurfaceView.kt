@@ -1,4 +1,4 @@
-package ru.igla.duocamera.ui
+package ru.igla.duocamera.ui.widgets
 
 import android.content.Context
 import android.util.AttributeSet
