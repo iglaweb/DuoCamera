@@ -11,8 +11,6 @@ import ru.igla.duocamera.utils.logI
 
 class DebugCameraActivity : AppCompatActivity() {
 
-    private lateinit var cameraInfo: CameraInfo
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -20,17 +18,17 @@ class DebugCameraActivity : AppCompatActivity() {
         actionBar?.hide()
         supportActionBar?.hide()
 
-        cameraInfo = requireNotNull(intent.getParcelableExtra(CAMERA_INFO_OBJ))
+        val cameraInfo: CameraInfo = requireNotNull(intent.getParcelableExtra(CAMERA_INFO_OBJ))
         logI { "Camera info: $cameraInfo" }
 
         if (savedInstanceState == null) {
             supportFragmentManager.apply {
                 beginTransaction()
-                    .replace(R.id.fragment_container1, newInstance("0", cameraInfo))
+                    .replace(R.id.fragment_container1, newInstance(CAMERA_FIRST_ID, cameraInfo))
                     .commit()
 
                 beginTransaction()
-                    .replace(R.id.fragment_container2, newInstance("1", cameraInfo))
+                    .replace(R.id.fragment_container2, newInstance(CAMERA_SECOND_ID, cameraInfo))
                     .commit()
             }
         }
@@ -51,5 +49,7 @@ class DebugCameraActivity : AppCompatActivity() {
     companion object {
         const val ANIMATION_SLOW_MILLIS = 100L
         const val CAMERA_INFO_OBJ = "data"
+        private const val CAMERA_FIRST_ID = "0"
+        private const val CAMERA_SECOND_ID = "1"
     }
 }

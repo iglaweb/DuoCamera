@@ -19,9 +19,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.igla.duocamera.dto.CameraInfo
+import ru.igla.duocamera.dto.CameraReqType
 import ru.igla.duocamera.ui.toastcompat.Toaster
 import ru.igla.duocamera.ui.widgets.GenericListAdapter
-import ru.igla.duocamera.utils.*
+import ru.igla.duocamera.utils.CameraUtils
+import ru.igla.duocamera.utils.IntentUtils
+import ru.igla.duocamera.utils.SIZE_1080P
+import ru.igla.duocamera.utils.SIZE_VGA
 
 
 /**

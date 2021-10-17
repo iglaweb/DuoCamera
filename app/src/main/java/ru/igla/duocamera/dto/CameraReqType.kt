@@ -1,4 +1,4 @@
-package ru.igla.duocamera.utils
+package ru.igla.duocamera.dto
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

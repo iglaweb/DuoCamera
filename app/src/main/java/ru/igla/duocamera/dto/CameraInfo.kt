@@ -3,7 +3,6 @@ package ru.igla.duocamera.dto
 import android.os.Parcelable
 import android.util.Size
 import kotlinx.parcelize.Parcelize
-import ru.igla.duocamera.utils.CameraReqType
 
 @Parcelize
 data class CameraInfo(

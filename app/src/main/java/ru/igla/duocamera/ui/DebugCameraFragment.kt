@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
-import android.util.AttributeSet
 import android.util.Log
 import android.util.Range
 import android.util.Size
@@ -19,7 +18,9 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.*
 import ru.igla.duocamera.R
 import ru.igla.duocamera.databinding.DebugCameraFragmentBinding
+import ru.igla.duocamera.dto.CameraInfo
 import ru.igla.duocamera.dto.CameraInfoExt
+import ru.igla.duocamera.dto.CameraReqType
 import ru.igla.duocamera.ui.toastcompat.Toaster
 import ru.igla.duocamera.utils.*
 import java.util.*
@@ -35,12 +36,7 @@ class DebugCameraFragment : BaseFragment() {
 
     private val toaster: Toaster by lazy { Toaster(requireContext().applicationContext) }
 
-    private var cameraInfoExt: CameraInfoExt? = null
-    private var cameraId = "0"
-    private var fps = 30
-
-    // your fragment parameter, a string
-    private var cameraName: String? = null
+    private lateinit var cameraInfoExt: CameraInfoExt
 
     private val fpsMeasure by lazy {
         FpsMeasure(3_000L)
@@ -69,7 +65,7 @@ class DebugCameraFragment : BaseFragment() {
 
     /** [CameraCharacteristics] corresponding to the provided Camera ID */
     private val characteristics: CameraCharacteristics by lazy {
-        cameraManager.getCameraCharacteristics(cameraId)
+        cameraManager.getCameraCharacteristics(cameraInfoExt.cameraRequestId)
     }
 
     /**
@@ -121,7 +117,10 @@ class DebugCameraFragment : BaseFragment() {
             addTarget(fragmentCameraBinding.viewFinder.holder.surface)
             addTarget(recorderSurface)
             // Sets user requested FPS for all targets
-            set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, Range(fps, fps))
+            set(
+                CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
+                Range(cameraInfoExt.cameraInfo.fps, cameraInfoExt.cameraInfo.fps)
+            )
         }.build()
     }
 
@@ -139,27 +138,6 @@ class DebugCameraFragment : BaseFragment() {
 
     private val fragmentCameraBinding get() = _fragmentCameraBinding!!
 
-    /**
-     * Only called when initializing via xml
-     * Parse attributes during inflation from a view hierarchy into the
-     * arguments we handle.
-     */
-    override fun onInflate(context: Context, attrs: AttributeSet, savedInstanceState: Bundle?) {
-        super.onInflate(context, attrs, savedInstanceState)
-        logI { "OnInflate" }
-        if (cameraName == null) {
-            context.obtainStyledAttributes(attrs, R.styleable.CameraDebugFragment_Args).apply {
-                if (hasValue(R.styleable.CameraDebugFragment_Args_camera_name)) {
-                    cameraName = getString(R.styleable.CameraDebugFragment_Args_camera_name)
-                    cameraName?.apply {
-                        cameraId = if (cameraName.equals("camera0")) "0" else "1"
-                    }
-                }
-                recycle()
-            }
-        }
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -167,9 +145,16 @@ class DebugCameraFragment : BaseFragment() {
     ): View {
         arguments?.apply {
             cameraInfoExt = getParcelable(CAMERA_INFO_EXT)
-            cameraInfoExt?.let {
-                cameraId = it.cameraRequestId
-            }
+                ?: CameraInfoExt(
+                    "0",
+                    CameraInfo(
+                        CameraReqType.REQ_MAX_SIZE,
+                        "30 fps, 640x480",
+                        "0",
+                        Size(640, 480),
+                        30
+                    )
+                )
         }
         _fragmentCameraBinding = DebugCameraFragmentBinding.inflate(
             inflater,
@@ -197,11 +182,10 @@ class DebugCameraFragment : BaseFragment() {
                 val previewSize = fetchPreviewSize()
                 this@DebugCameraFragment.previewSize = previewSize
 
-                Log.d(
-                    TAG,
+                logD {
                     "View finder size: ${fragmentCameraBinding.viewFinder.width} x ${fragmentCameraBinding.viewFinder.height}"
-                )
-                Log.d(TAG, "Selected preview size: $previewSize")
+                }
+                logD { "Selected preview size: $previewSize" }
                 fragmentCameraBinding.viewFinder.setAspectRatio(
                     previewSize.width,
                     previewSize.height
@@ -221,9 +205,9 @@ class DebugCameraFragment : BaseFragment() {
     }
 
     private fun fetchPreviewSize(): Size {
-        when (cameraInfoExt?.cameraInfo?.cameraReqType) {
+        when (cameraInfoExt.cameraInfo.cameraReqType) {
             CameraReqType.GENERAL_CAMERA_SIZE -> {
-                return cameraInfoExt?.cameraInfo?.size!!
+                return cameraInfoExt.cameraInfo.size
             }
             CameraReqType.REQ_MIN_SIZE -> {
                 return getMinPreviewOutputSize(
@@ -309,7 +293,7 @@ class DebugCameraFragment : BaseFragment() {
             image.close()
 
             val currentFps = fpsMeasure.calcFps().toInt()
-            logI { "Frame #${++frameNumber}, fps $currentFps" }
+            logI { "Frame #${++frameNumber}, cameraId ${cameraInfoExt.cameraRequestId} fps $currentFps" }
             if (currentFps != lastFPS) {
                 onChangeFps(currentFps)
                 lastFPS = currentFps
@@ -320,7 +304,7 @@ class DebugCameraFragment : BaseFragment() {
         lifecycleScope.launch(Dispatchers.Main) {
             fragmentCameraBinding.textviewCamDescription.text =
                 getString(R.string.camera_description).format(
-                    Locale.US, cameraId, previewSize.toString(), fps
+                    Locale.US, cameraInfoExt.cameraRequestId, previewSize.toString(), fps
                 )
         }
     }
@@ -334,7 +318,7 @@ class DebugCameraFragment : BaseFragment() {
     @SuppressLint("ClickableViewAccessibility")
     private fun initializeCamera() = lifecycleScope.launch(Dispatchers.Main) {
         // Open the selected camera
-        camera = openCamera(cameraManager, cameraId, cameraHandler)
+        camera = openCamera(cameraManager, cameraInfoExt.cameraRequestId, cameraHandler)
 
         imageReaderPreview = ImageReader.newInstance(
             imageRetrieveSize.width,
@@ -447,6 +431,7 @@ class DebugCameraFragment : BaseFragment() {
 
     override fun onDestroy() {
         super.onDestroy()
+        imageReaderPreview?.close()
         cameraThread.quitSafely()
         mediaRecorderWrapper.destroyRecording()
         recorderSurface.release()

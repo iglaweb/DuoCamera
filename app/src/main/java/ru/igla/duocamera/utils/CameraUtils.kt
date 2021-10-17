@@ -5,6 +5,7 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.media.MediaRecorder
 import ru.igla.duocamera.dto.CameraInfo
+import ru.igla.duocamera.dto.CameraReqType
 
 object CameraUtils {
 
