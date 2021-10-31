@@ -7,7 +7,7 @@ import android.util.Size
 class YubToBitmapConverter {
 
     private var rgbFrameBitmap: Bitmap? = null
-    private val yuvBytes = arrayOfNulls<ByteArray>(3)
+    private val yuvBytes by lazy { arrayOfNulls<ByteArray>(3) }
     private var rgbBytes: IntArray? = null
 
     private fun getRgbArray(previewSize: Size): IntArray {
@@ -41,7 +41,7 @@ class YubToBitmapConverter {
     }
 
 
-    private fun getClone(bitmap: Bitmap): Bitmap {
+    private fun cloneBitmap(bitmap: Bitmap): Bitmap {
         return Bitmap.createBitmap(
             bitmap,
             0, 0,
@@ -90,8 +90,6 @@ class YubToBitmapConverter {
             previewSize.width,
             previewSize.height
         )
-
-
-        return getClone(rgbFrameBitmap!!)
+        return cloneBitmap(rgbFrameBitmap!!)
     }
 }
