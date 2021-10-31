@@ -2,8 +2,11 @@ package ru.igla.duocamera.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.ImageFormat
 import android.hardware.camera2.*
+import android.media.Image
+import android.media.Image.Plane
 import android.media.ImageReader
 import android.media.MediaScannerConnection
 import android.os.Bundle
@@ -164,6 +167,18 @@ class DebugCameraFragment : BaseFragment() {
         return fragmentCameraBinding.root
     }
 
+    private val setImageBitmap = { targetBitmap: Bitmap? ->
+        fragmentCameraBinding.staticCameraImagePreview.clearAndSetBitmapNoRefresh(targetBitmap)
+    }
+
+    private fun onPreviewImage(bitmap: Bitmap?) {
+        bitmap?.let { it ->
+            ViewUtils.runOnUiThread {
+                setImageBitmap(it)
+            }
+        }
+    }
+
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -287,9 +302,23 @@ class DebugCameraFragment : BaseFragment() {
         delay(DebugCameraActivity.ANIMATION_SLOW_MILLIS)
     }
 
+    private fun getClone(bitmap: Bitmap): Bitmap {
+        return Bitmap.createBitmap(
+            bitmap,
+            0, 0,
+            bitmap.width,
+            bitmap.height,
+            null,
+            false
+        )
+    }
+
     private val previewAvailableListener =
         ImageReader.OnImageAvailableListener { reader ->
             val image = reader.acquireLatestImage() ?: return@OnImageAvailableListener
+            extractBitmap(image)
+            val rotated = getClone(rgbFrameBitmap!!)
+            onPreviewImage(rotated)
             image.close()
 
             val currentFps = fpsMeasure.calcFps().toInt()
@@ -299,6 +328,59 @@ class DebugCameraFragment : BaseFragment() {
                 lastFPS = currentFps
             }
         }
+
+
+    private var rgbFrameBitmap: Bitmap? = null
+    private val yuvBytes = arrayOfNulls<ByteArray>(3)
+    private var rgbBytes: IntArray? = null
+
+    private fun extractBitmap(imgYUV420: Image): Bitmap {
+        val size: Int = previewSize.width * previewSize.height
+
+        if (rgbBytes == null || rgbBytes!!.size != size) {
+            rgbBytes = IntArray(size)
+        }
+
+        if (rgbFrameBitmap == null ||
+            rgbFrameBitmap!!.height != previewSize.height ||
+            rgbFrameBitmap!!.width != previewSize.width
+        ) {
+            rgbFrameBitmap = Bitmap.createBitmap(
+                previewSize.width,
+                previewSize.height,
+                Bitmap.Config.ARGB_8888
+            )
+        }
+
+        val planes: Array<Plane> = imgYUV420.planes
+        TensorFlowImageUtils.fillBytes(planes, yuvBytes)
+        val yRowStride = planes[0].rowStride
+        val uvRowStride = planes[1].rowStride
+        val uvPixelStride = planes[1].pixelStride
+
+        TensorFlowImageUtils.convertYUV420ToARGB8888(
+            yuvBytes[0],
+            yuvBytes[1],
+            yuvBytes[2],
+            previewSize.width,
+            previewSize.height,
+            yRowStride,
+            uvRowStride,
+            uvPixelStride,
+            rgbBytes
+        )
+
+        rgbFrameBitmap!!.setPixels(
+            rgbBytes,
+            0,
+            previewSize.width,
+            0, 0,
+            previewSize.width,
+            previewSize.height
+        )
+        return rgbFrameBitmap!!
+    }
+
 
     private fun onChangeFps(fps: Int) {
         lifecycleScope.launch(Dispatchers.Main) {
@@ -435,6 +517,11 @@ class DebugCameraFragment : BaseFragment() {
         cameraThread.quitSafely()
         mediaRecorderWrapper.destroyRecording()
         recorderSurface.release()
+        rgbFrameBitmap?.apply {
+            if (!isRecycled) {
+                recycle()
+            }
+        }
     }
 
     override fun onDestroyView() {

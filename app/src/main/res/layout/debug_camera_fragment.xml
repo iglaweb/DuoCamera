@@ -16,6 +16,39 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:layout_gravity="top|right">
+
+            <ImageView
+                android:id="@+id/staticCameraImagePreview"
+                android:layout_width="wrap_content"
+                android:layout_height="100dp"
+                android:layout_margin="0dp"
+                android:adjustViewBounds="true"
+                android:padding="0dp"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/previewText"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_gravity="top|right"
+                android:layout_margin="0dp"
+                android:background="#80000000"
+                android:gravity="center"
+                android:padding="4dp"
+                android:text="Preview"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                tools:ignore="HardcodedText" />
+
+        </FrameLayout>
+
+
         <ImageButton
             android:id="@+id/capture_button"
             android:layout_width="64dp"
