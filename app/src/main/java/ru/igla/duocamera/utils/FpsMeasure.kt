@@ -37,7 +37,7 @@ class FpsMeasure(
         }
     }
 
-    fun reset() {
+    private fun reset() {
         logI { "Recalculate fps" }
         frameCounter = 0
         startMeasureFpsNs = -1L

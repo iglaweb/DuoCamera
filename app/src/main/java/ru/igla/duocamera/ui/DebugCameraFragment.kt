@@ -5,8 +5,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageFormat
 import android.hardware.camera2.*
-import android.media.Image
-import android.media.Image.Plane
 import android.media.ImageReader
 import android.media.MediaScannerConnection
 import android.os.Bundle
@@ -119,6 +117,9 @@ class DebugCameraFragment : BaseFragment() {
             // Add the preview and recording surface targets
             addTarget(fragmentCameraBinding.viewFinder.holder.surface)
             addTarget(recorderSurface)
+            imageReaderPreview?.apply {
+                addTarget(surface)
+            }
             // Sets user requested FPS for all targets
             set(
                 CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
@@ -126,6 +127,8 @@ class DebugCameraFragment : BaseFragment() {
             )
         }.build()
     }
+
+    private val yubToBitmapConverter by lazy { YubToBitmapConverter() }
 
     /**
      * The [android.util.Size] of camera preview.
@@ -214,7 +217,7 @@ class DebugCameraFragment : BaseFragment() {
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
             observe(viewLifecycleOwner, { orientation ->
-                Log.d(TAG, "Orientation changed: $orientation")
+                logI { "Orientation changed: $orientation" }
             })
         }
     }
@@ -253,6 +256,10 @@ class DebugCameraFragment : BaseFragment() {
             mediaRecorderWrapper.startRecording(this)
         }
 
+        onStartRecording()
+    }
+
+    private suspend fun onStartRecording() {
         withContext(Dispatchers.Main) {
             fragmentCameraBinding.cMeter.apply {
                 base = SystemClock.elapsedRealtime()
@@ -277,6 +284,13 @@ class DebugCameraFragment : BaseFragment() {
             null
         )
 
+        onStopRecording(view)
+
+        // Finishes our current camera screen
+        delay(DebugCameraActivity.ANIMATION_SLOW_MILLIS)
+    }
+
+    private suspend fun onStopRecording(view: View) {
         withContext(Dispatchers.Main) {
             fragmentCameraBinding.cMeter.stop()
             flashRecordAnimation.stopAnim()
@@ -297,28 +311,14 @@ class DebugCameraFragment : BaseFragment() {
                 )
             }
         }
-
-        // Finishes our current camera screen
-        delay(DebugCameraActivity.ANIMATION_SLOW_MILLIS)
-    }
-
-    private fun getClone(bitmap: Bitmap): Bitmap {
-        return Bitmap.createBitmap(
-            bitmap,
-            0, 0,
-            bitmap.width,
-            bitmap.height,
-            null,
-            false
-        )
     }
 
     private val previewAvailableListener =
         ImageReader.OnImageAvailableListener { reader ->
             val image = reader.acquireLatestImage() ?: return@OnImageAvailableListener
-            extractBitmap(image)
-            val rotated = getClone(rgbFrameBitmap!!)
-            onPreviewImage(rotated)
+
+            val bitmap = yubToBitmapConverter.extractBitmap(image, previewSize)
+            onPreviewImage(bitmap)
             image.close()
 
             val currentFps = fpsMeasure.calcFps().toInt()
@@ -328,59 +328,6 @@ class DebugCameraFragment : BaseFragment() {
                 lastFPS = currentFps
             }
         }
-
-
-    private var rgbFrameBitmap: Bitmap? = null
-    private val yuvBytes = arrayOfNulls<ByteArray>(3)
-    private var rgbBytes: IntArray? = null
-
-    private fun extractBitmap(imgYUV420: Image): Bitmap {
-        val size: Int = previewSize.width * previewSize.height
-
-        if (rgbBytes == null || rgbBytes!!.size != size) {
-            rgbBytes = IntArray(size)
-        }
-
-        if (rgbFrameBitmap == null ||
-            rgbFrameBitmap!!.height != previewSize.height ||
-            rgbFrameBitmap!!.width != previewSize.width
-        ) {
-            rgbFrameBitmap = Bitmap.createBitmap(
-                previewSize.width,
-                previewSize.height,
-                Bitmap.Config.ARGB_8888
-            )
-        }
-
-        val planes: Array<Plane> = imgYUV420.planes
-        TensorFlowImageUtils.fillBytes(planes, yuvBytes)
-        val yRowStride = planes[0].rowStride
-        val uvRowStride = planes[1].rowStride
-        val uvPixelStride = planes[1].pixelStride
-
-        TensorFlowImageUtils.convertYUV420ToARGB8888(
-            yuvBytes[0],
-            yuvBytes[1],
-            yuvBytes[2],
-            previewSize.width,
-            previewSize.height,
-            yRowStride,
-            uvRowStride,
-            uvPixelStride,
-            rgbBytes
-        )
-
-        rgbFrameBitmap!!.setPixels(
-            rgbBytes,
-            0,
-            previewSize.width,
-            0, 0,
-            previewSize.width,
-            previewSize.height
-        )
-        return rgbFrameBitmap!!
-    }
-
 
     private fun onChangeFps(fps: Int) {
         lifecycleScope.launch(Dispatchers.Main) {
@@ -402,7 +349,7 @@ class DebugCameraFragment : BaseFragment() {
         // Open the selected camera
         camera = openCamera(cameraManager, cameraInfoExt.cameraRequestId, cameraHandler)
 
-        imageReaderPreview = ImageReader.newInstance(
+        val imageReader = ImageReader.newInstance(
             imageRetrieveSize.width,
             imageRetrieveSize.height,
             ImageFormat.YUV_420_888,
@@ -412,12 +359,14 @@ class DebugCameraFragment : BaseFragment() {
                 previewAvailableListener,
                 null
             )
+        }.also {
+            imageReaderPreview = it
         }
 
         // Creates list of Surfaces where the camera will output frames
         val targets = listOf(
             fragmentCameraBinding.viewFinder.holder.surface,
-            imageReaderPreview!!.surface,
+            imageReader.surface,
             recorderSurface
         )
 
@@ -429,11 +378,11 @@ class DebugCameraFragment : BaseFragment() {
         session.setRepeatingRequest(previewRequest, null, cameraHandler)
 
         fragmentCameraBinding.captureButton.setOnClickListener { view ->
-            onClickCaptureBtn(view)
+            onClickRecordBtn(view)
         }
     }
 
-    private fun onClickCaptureBtn(view: View) {
+    private fun onClickRecordBtn(view: View) {
         lifecycleScope.launch(recordBgThread) {
             if (recordingStatus == STATE_IDLE) {
                 recordingStatus = STATE_STARTING
@@ -458,7 +407,7 @@ class DebugCameraFragment : BaseFragment() {
             override fun onOpened(device: CameraDevice) = cont.resume(device)
 
             override fun onDisconnected(device: CameraDevice) {
-                Log.w(TAG, "Camera $cameraId has been disconnected")
+                logI { "Camera $cameraId has been disconnected" }
                 requireActivity().finish()
             }
 
@@ -504,6 +453,10 @@ class DebugCameraFragment : BaseFragment() {
 
     override fun onStop() {
         super.onStop()
+        if (recordingStatus == STATE_RECORDING) {
+            mediaRecorderWrapper.forceStopRecording()
+            recordingStatus = STATE_IDLE
+        }
         try {
             camera.close()
         } catch (exc: Throwable) {
@@ -517,11 +470,7 @@ class DebugCameraFragment : BaseFragment() {
         cameraThread.quitSafely()
         mediaRecorderWrapper.destroyRecording()
         recorderSurface.release()
-        rgbFrameBitmap?.apply {
-            if (!isRecycled) {
-                recycle()
-            }
-        }
+        yubToBitmapConverter.destroy()
     }
 
     override fun onDestroyView() {

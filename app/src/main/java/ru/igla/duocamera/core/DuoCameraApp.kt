@@ -1,4 +1,4 @@
-package ru.igla.duocamera.ui
+package ru.igla.duocamera.core
 
 import android.app.Application
 import android.os.StrictMode

@@ -10,6 +10,7 @@ import androidx.core.content.FileProvider
 import kotlinx.coroutines.delay
 import ru.igla.duocamera.BuildConfig
 import ru.igla.duocamera.utils.logD
+import timber.log.Timber
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -81,9 +82,16 @@ class MediaRecorderWrapper(
         if (elapsedTimeMillis < MIN_REQUIRED_RECORDING_TIME_MILLIS) {
             delay(MIN_REQUIRED_RECORDING_TIME_MILLIS - elapsedTimeMillis)
         }
+        forceStopRecording()
+    }
 
+    fun forceStopRecording() {
         logD { "Recording stopped. Output file: $outputFile" }
-        recorder?.stop()
+        try {
+            recorder?.stop()
+        } catch (exc: Throwable) {
+            Timber.e(exc)
+        }
     }
 
     fun destroyRecording() {

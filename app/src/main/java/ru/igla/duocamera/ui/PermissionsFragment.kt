@@ -8,7 +8,6 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
-import ru.igla.duocamera.ui.BaseFragment
 import ru.igla.duocamera.ui.toastcompat.Toaster
 
 
@@ -37,8 +36,13 @@ class PermissionsFragment : BaseFragment() {
         onBackFragmentGoListener = try {
             activity as OnBackFragmentGoListener
         } catch (e: ClassCastException) {
-            throw ClassCastException("$activity must implement OnArticleSelectedListener")
+            throw ClassCastException("$activity must implement OnBackFragmentGoListener")
         }
+    }
+
+    override fun onDetach() {
+        onBackFragmentGoListener = null
+        super.onDetach()
     }
 
     private fun requestCameraPermission() {
@@ -79,8 +83,6 @@ class PermissionsFragment : BaseFragment() {
     }
 
     companion object {
-
-
         private const val PERMISSIONS_REQUEST_CODE = 10
         private val PERMISSIONS_REQUIRED = arrayOf(
             Manifest.permission.CAMERA,

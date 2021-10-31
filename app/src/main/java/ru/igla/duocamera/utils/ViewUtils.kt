@@ -1,6 +1,5 @@
 package ru.igla.duocamera.utils
 
-import android.content.DialogInterface
 import android.os.Handler
 import android.os.Looper
 
@@ -22,37 +21,8 @@ object ViewUtils {
         }
     }
 
-    fun runOnUiThread(action: Runnable, delay: Long) {
-        uiHandler.postDelayed(action, delay)
-    }
-
-    @JvmStatic
-    fun stopHandler(backgroundHandler: Handler?) {
-        backgroundHandler?.looper?.apply {
-            quitSafely()
-        }
-    }
-
     @JvmStatic
     fun cancelCallbacks() {
         uiHandler.removeCallbacksAndMessages(null)
-    }
-
-    @JvmStatic
-    fun cancelCallback(runnable: Runnable) {
-        uiHandler.removeCallbacks(runnable)
-    }
-
-    @JvmStatic
-    fun dismissDialogSafety(dialog: DialogInterface?) {
-        dialog?.let {
-            runOnUiThread {
-                try {
-                    it.dismiss()
-                } catch (e: Exception) {
-                    Log.e(e)
-                }
-            }
-        }
     }
 }

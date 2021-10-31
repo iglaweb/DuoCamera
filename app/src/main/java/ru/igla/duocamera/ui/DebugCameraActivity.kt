@@ -1,4 +1,4 @@
-package ru.igla.duocamera.ui;
+package ru.igla.duocamera.ui
 
 import android.os.Bundle
 import android.view.Window
