@@ -1,4 +1,4 @@
-package ru.igla.duocamera.ui
+package ru.igla.duocamera.core
 
 import android.content.Context
 import android.content.Intent
@@ -41,6 +41,22 @@ class MediaRecorderWrapper(
             val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
             return File(context.filesDir, "VID_${sdf.format(Date())}.$extension")
         }
+
+        fun resolveIntentFile(context: Context, outputFile: File): Intent {
+            return Intent().apply {
+                action = Intent.ACTION_VIEW
+                type = MimeTypeMap.getSingleton()
+                    .getMimeTypeFromExtension(outputFile.extension)
+                val authority = "${BuildConfig.APPLICATION_ID}.provider"
+                data = FileProvider.getUriForFile(
+                    context.applicationContext,
+                    authority,
+                    outputFile
+                )
+                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+        }
     }
 
     /** Creates a [MediaRecorder] instance using the provided [Surface] as input */
@@ -58,22 +74,6 @@ class MediaRecorderWrapper(
         setVideoEncoder(MediaRecorder.VideoEncoder.H264)
         setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         setInputSurface(surface)
-    }
-
-    fun resolveIntentFile(): Intent {
-        return Intent().apply {
-            action = Intent.ACTION_VIEW
-            type = MimeTypeMap.getSingleton()
-                .getMimeTypeFromExtension(outputFile.extension)
-            val authority = "${BuildConfig.APPLICATION_ID}.provider"
-            data = FileProvider.getUriForFile(
-                context.applicationContext,
-                authority,
-                outputFile
-            )
-            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
     }
 
     suspend fun stopRecording() {
