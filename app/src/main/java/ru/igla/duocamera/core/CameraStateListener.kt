@@ -1,5 +1,7 @@
 package ru.igla.duocamera.core
 
+import android.hardware.camera2.CameraDevice
+
 abstract class CameraStateListener {
     abstract fun onOpened(camera: CameraDevice)
 
