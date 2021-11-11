@@ -11,6 +11,8 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.*
 import ru.igla.duocamera.R
 import ru.igla.duocamera.core.CameraProvider
+import ru.igla.duocamera.core.CameraStateListener
+import ru.igla.duocamera.core.FpsCalculator
 import ru.igla.duocamera.core.MediaRecorderWrapper
 import ru.igla.duocamera.databinding.DebugCameraFragmentBinding
 import ru.igla.duocamera.dto.CameraInfo
@@ -28,6 +30,10 @@ class DebugCameraFragment : BaseFragment() {
 
     private val flashRecordAnimation by lazy { FlashRecordAnimation() }
 
+    private val fpsCalculator by lazy {
+        FpsCalculator()
+    }
+
     private val toaster: Toaster by lazy { Toaster(requireContext().applicationContext) }
 
     private lateinit var cameraInfoExt: CameraInfoExt
@@ -37,7 +43,7 @@ class DebugCameraFragment : BaseFragment() {
 
     private val fragmentCameraBinding get() = _fragmentCameraBinding!!
 
-    private val cameraStateListener = object : CameraProvider.CameraStateListener() {
+    private val cameraStateListener = object : CameraStateListener() {
         override fun onOpened(camera: CameraDevice) {
             logI { "Camera opened" }
         }
@@ -55,7 +61,7 @@ class DebugCameraFragment : BaseFragment() {
             logI { "Camera initialized" }
             //set click listener after camera opened
             fragmentCameraBinding.captureButton.setOnClickListener { view ->
-                cameraProvider.toogleRecord(view)
+                cameraProvider.toggleRecord(view)
             }
         }
     }
@@ -102,13 +108,13 @@ class DebugCameraFragment : BaseFragment() {
             object : CameraProvider.ReadBitmapListener {
                 override fun onReadBitmap(bitmap: Bitmap) {
                     this@DebugCameraFragment.onPreviewImage(bitmap)
+
+                    val fps = fpsCalculator.resolveFps(cameraInfoExt.cameraRequestId)
+                    fps?.apply {
+                        this@DebugCameraFragment.onChangeFps(this)
+                    }
                 }
-            },
-            object : CameraProvider.FpsChangeListener {
-                override fun onChangeFps(fps: Int) {
-                    this@DebugCameraFragment.onChangeFps(fps)
-                }
-            },
+            }
         )
 
         return fragmentCameraBinding.root

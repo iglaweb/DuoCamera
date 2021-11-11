@@ -34,23 +34,8 @@ class CameraProvider(
     private val viewFinder: AutoFitSurfaceView,
     private val cameraInfoExt: CameraInfoExt,
     private val recordingListener: RecordingListener,
-    private val readBitmapListener: ReadBitmapListener,
-    private val fpsChangeListener: FpsChangeListener?
+    private val readBitmapListener: ReadBitmapListener
 ) {
-
-    abstract class CameraStateListener {
-        abstract fun onOpened(camera: CameraDevice)
-
-        abstract fun onDisconnected(camera: CameraDevice)
-
-        abstract fun onError(camera: CameraDevice, error: Int)
-
-        abstract fun onInitCamera(camera: CameraDevice)
-    }
-
-    interface FpsChangeListener {
-        fun onChangeFps(fps: Int)
-    }
 
     interface RecordingListener {
         suspend fun onStartRecording()
@@ -61,16 +46,6 @@ class CameraProvider(
         fun onReadBitmap(bitmap: Bitmap)
     }
 
-    private val fpsMeasure by lazy {
-        FpsMeasure(3_000L)
-    }
-
-    private var frameNumber = 0
-
-    /**
-     * Capture the last FPS to allow debouncing to notify the consumer only when an FPS change is actually detected.
-     */
-    private var lastFPS = 0
 
     private var recordingStatus = STATE_IDLE
 
@@ -257,13 +232,6 @@ class CameraProvider(
             val bitmap = yubToBitmapConverter.extractBitmap(image, previewSize)
             readBitmapListener.onReadBitmap(bitmap)
             image.close()
-
-            val currentFps = fpsMeasure.calcFps().toInt()
-            logI { "Frame #${++frameNumber}, cameraId ${cameraInfoExt.cameraRequestId} fps $currentFps" }
-            if (currentFps != lastFPS) {
-                lastFPS = currentFps
-                fpsChangeListener?.onChangeFps(currentFps)
-            }
         }
 
     /**
@@ -308,7 +276,7 @@ class CameraProvider(
         cameraStateListener.onInitCamera(camera)
     }
 
-    fun toogleRecord(view: View) {
+    fun toggleRecord(view: View) {
         lifecycleScope.launch(recordBgThread) {
             if (recordingStatus == STATE_IDLE) {
                 recordingStatus = STATE_STARTING
